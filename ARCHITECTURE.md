@@ -2,6 +2,14 @@
 
 Relay is a TypeScript monolith with three explicit boundaries: a reviewer-facing Next.js client, server routes and an agent orchestrator, and PostgreSQL as the source of truth. Keeping those boundaries in one deployable service minimizes operational surface for the assessment while preserving separable modules for production extraction.
 
+## Runtime and integration boundaries
+
+- Next.js 16 and React 19 serve the reviewer console and the HTTP route handlers from one Node.js 22 process.
+- PostgreSQL 17 is the system of record. Drizzle ORM provides typed schema and query access, while checked-in SQL migrations version the database.
+- Groq hosts the language model. The OpenAI JavaScript SDK is used only as a compatible Responses API client and is configured with Groq's base URL and `GROQ_API_KEY`; no model request is sent to OpenAI. The default model is `openai/gpt-oss-20b`, overridable with `GROQ_MODEL`.
+- Zod validates public request bodies and model-selected tool arguments at runtime. The model and browser are both treated as untrusted callers.
+- The public application API is implemented under `src/app/api`. Its OpenAPI 3.1 document is served at `/api/openapi`, with interactive documentation at `/swagger`.
+
 ## Agent boundary
 
 The model may read a customer-owned order, propose a refund, cancel an eligible order, or escalate. Refunds always require human approval. Cancellation is the only autonomous mutation, and only a verified `PROCESSING` order can be cancelled. Replacements, ambiguous requests, unknown orders, ownership failures, unsafe amounts, and tool failures go to a reviewer.
@@ -18,7 +26,7 @@ The prompt describes policy so the model can make useful choices, but no privile
 
 ## Tool and data design
 
-The Responses API loop in `src/server/agent/run.ts` sends the customer message, accepts model-selected function calls, executes them, returns tool outputs, and repeats for at most eight rounds. The sequence is not hardcoded. A tool-budget exhaustion or provider failure escalates safely.
+The Groq-hosted Responses API loop in `src/server/agent/run.ts` sends the customer message, accepts model-selected function calls, executes them locally, returns tool outputs, and repeats for at most eight rounds. The sequence is not hardcoded. A tool-budget exhaustion or provider failure escalates safely.
 
 `get_order` returns only operational fields needed for a decision and only when the order belongs to the requesting customer. `request_refund` validates the proposal but only creates an escalation. `cancel_order` invokes the guarded mutation. `escalate_request` records cases the system cannot safely execute. These task-oriented APIs expose less data and authority than generic CRUD or SQL tools, reducing both accidental misuse and prompt-injection impact.
 
@@ -54,6 +62,16 @@ Task-specific tools make authority visible and independently testable. A generic
 ### Polling with conflict revalidation
 
 SWR polls every three seconds and refreshes immediately after review. This gives honest state across browser sessions without introducing a realtime service for a small console. WebSockets or server-sent events would reduce latency at larger scale, but would not replace transactional conflict handling.
+
+## Startup and deployment
+
+Database migrations are part of application startup rather than a manual deployment step. `npm run dev` migrates and loads idempotent demo data before starting the development server. `npm start` migrates before a normal production start, while `npm run start:seeded` migrates and seeds the assessment environment.
+
+Docker Compose provides the complete local topology: it builds the application image, starts PostgreSQL with a persistent volume, waits for the database health check, then migrates, seeds, and starts Next.js. After `GROQ_API_KEY` is configured, `docker compose up --build` is the only containerized setup and startup command.
+
+`render.yaml` describes the hosted topology as one Node web service and one managed PostgreSQL database. Render builds the Next.js application without requiring database access during the build, then runs migrations and the idempotent seed at service startup. Both Docker Compose and Render use `/api/health`, which executes a database query, rather than treating process availability alone as service health.
+
+The migration and seed scripts are intentionally separate. Migrations are required in every environment; demo seed data is used by the containerized assessment and Render configuration but is not required for a normal production start.
 
 ## Build versus buy at scale
 
