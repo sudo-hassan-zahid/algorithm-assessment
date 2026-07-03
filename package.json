@@ -1,0 +1,50 @@
+{
+  "name": "support-operations-console",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx scripts/migrate.ts",
+    "db:seed": "tsx scripts/seed.ts",
+    "db:setup": "npm run db:migrate && npm run db:seed"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^5.2.2",
+    "dotenv": "^17.3.1",
+    "drizzle-orm": "^0.45.2",
+    "lucide-react": "^0.468.0",
+    "next": "16.2.10",
+    "openai": "^6.45.0",
+    "pg": "^8.22.0",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "react-hook-form": "^7.71.1",
+    "swr": "^2.4.1",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.2.2",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@types/node": "^22.19.15",
+    "@types/pg": "^8.20.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "drizzle-kit": "^0.31.10",
+    "es-abstract": "^1.24.2",
+    "eslint": "^9.39.4",
+    "eslint-config-next": "16.2.10",
+    "jsdom": "^28.1.0",
+    "tailwindcss": "^4.2.2",
+    "tsx": "^4.23.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.9"
+  }
+}
