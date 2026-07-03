@@ -103,7 +103,7 @@ for (const [index, request] of requestSeeds.entries()) {
     agentRunId: runId,
     providerCallId: `seed-call-${index + 1}`,
     name: "get_order",
-    arguments: { order_id: index === 2 ? "2043" : `104${3 + index}` },
+    arguments: { order_id: ["1043", "1046", "2043"][index] },
     result: { ok: true, verifiedOwner: true },
     status: "SUCCEEDED",
   });
@@ -117,4 +117,3 @@ for (const [index, request] of requestSeeds.entries()) {
 
 await pool.end();
 console.log("Seed data ready.");
-

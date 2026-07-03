@@ -10,5 +10,5 @@ requirements.txt
 *interview-question*
 *interview_questions*
 *.log
+*.tsbuildinfo
 .DS_Store
-
