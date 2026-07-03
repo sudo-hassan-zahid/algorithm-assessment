@@ -7,24 +7,38 @@ Relay is a reviewer-first ecommerce support console backed by a real Groq tool-c
 - Next.js 16 and TypeScript
 - PostgreSQL 17 with Drizzle ORM
 - Groq Responses API through its OpenAI-compatible endpoint
+- OpenAPI 3.1 documentation at `/swagger`
 - SWR for concurrent UI refresh
 - Vitest for policy tests
 
 ## Local setup
 
-Requirements: Node.js 22+, PostgreSQL 17+, and a free Groq API key.
+Requirements: Docker and a free Groq API key. Copy `.env.example` to `.env`, add
+your `GROQ_API_KEY`, then start the complete stack:
 
 ```bash
 cp .env.example .env
+docker compose up --build
+```
+
+After that one-time API key configuration, `docker compose up --build` is the
+only setup and startup command. Do not run `npm install` on the host for the
+containerized workflow.
+
+Open `http://localhost:3000`. Compose installs the application, waits for
+PostgreSQL, applies migrations, loads the idempotent demo seed, and starts the
+server. New requests invoke the configured model.
+
+For host-based development with hot reload, run:
+
+```bash
+docker compose up postgres -d
 npm install
-docker compose up -d
-npm run db:setup
 npm run dev
 ```
 
-Open `http://localhost:3000`. The seed includes customers, orders, pending reviews, an automatic action, and trace data. New requests invoke the configured model.
-
-If PostgreSQL already runs locally, create a `support_ops` database and set `DATABASE_URL` instead of using Docker.
+`npm run dev` automatically migrates and seeds the database before Next.js
+starts. `npm start` automatically runs migrations without loading demo data.
 
 ## Verification
 
@@ -51,12 +65,13 @@ The exact enforcement paths are documented in [ARCHITECTURE.md](./ARCHITECTURE.m
 
 ## Deployment
 
-`render.yaml` provisions the web service and PostgreSQL database on Render. Create a Blueprint from the repository and provide `GROQ_API_KEY`; migrations and seed data run during the build.
+`render.yaml` provisions the web service and PostgreSQL database on Render. Create a Blueprint from the repository and provide `GROQ_API_KEY`; migrations and idempotent seed data run when the service starts.
 
 For another platform, use:
 
-- Build: `npm ci && npm run db:migrate && npm run db:seed && npm run build`
-- Start: `npm start`
+- Build: `npm ci && npm run build`
+- Start with migrations: `npm start`
+- Start with migrations and demo data: `npm run start:seeded`
 - Health check: `/api/health`
 
 ## API surface
@@ -69,3 +84,6 @@ For another platform, use:
 | `POST` | `/api/escalations/:id/review` | Atomically approve or reject an escalation |
 | `GET`  | `/api/customers`              | Seeded intake customers                    |
 | `GET`  | `/api/health`                 | Database-backed health check               |
+
+Interactive API documentation is available at [`/swagger`](http://localhost:3000/swagger),
+with the raw OpenAPI document at [`/api/openapi`](http://localhost:3000/api/openapi).

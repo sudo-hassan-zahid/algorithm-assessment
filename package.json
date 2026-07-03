@@ -10,8 +10,11 @@
   },
   "scripts": {
     "dev": "next dev",
+    "predev": "npm run db:setup",
     "build": "next build --webpack",
     "start": "next start",
+    "prestart": "npm run db:migrate",
+    "start:seeded": "npm run db:setup && next start",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -26,6 +29,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
+    "@scalar/nextjs-api-reference": "^0.11.8",
     "dotenv": "^17.3.1",
     "drizzle-orm": "^0.45.2",
     "lucide-react": "^0.468.0",

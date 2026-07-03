@@ -8,8 +8,8 @@ services:
     name: relay-support-console
     runtime: node
     plan: free
-    buildCommand: npm ci && npm run db:migrate && npm run db:seed && npm run build
-    startCommand: npm start
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start:seeded
     healthCheckPath: /api/health
     envVars:
       - key: DATABASE_URL

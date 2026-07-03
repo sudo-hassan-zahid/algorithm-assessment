@@ -6,7 +6,7 @@ This guide covers local setup, automated verification, manual acceptance testing
 
 - Node.js 22 or newer
 - npm
-- PostgreSQL 17 or newer
+- Docker Desktop or PostgreSQL 17 or newer
 - A Groq account and API key
 - A GitHub account with access to the repository
 - A Render account connected to GitHub
@@ -31,7 +31,7 @@ Keep `.env` private. It is ignored by Git and must never be committed.
 
 If the PostgreSQL password contains reserved URL characters such as `@`, `:`, `/`, or `#`, URL-encode the password before placing it in `DATABASE_URL`.
 
-## 2. Create and initialize PostgreSQL
+## 2. Start PostgreSQL and install dependencies
 
 Create the development database:
 
@@ -41,12 +41,16 @@ createdb -U postgres support_ops
 
 If `createdb` is unavailable or authentication fails, create a database named `support_ops` through pgAdmin using the same PostgreSQL user and password configured in `.env`.
 
-Install dependencies, apply migrations, and insert seed data:
+Alternatively, start only the included PostgreSQL container, then install dependencies:
 
 ```powershell
+docker compose up postgres -d
 npm install
-npm run db:setup
 ```
+
+When using Docker for the entire stack instead, run `docker compose up --build`
+and skip the next step; it is the only setup/start command after `.env` is
+configured, and no local Node.js installation is required.
 
 The seed creates two customers and several orders:
 
@@ -64,7 +68,13 @@ The seed creates two customers and several orders:
 npm run dev
 ```
 
+The `predev` hook applies migrations and loads the idempotent seed before the
+server starts.
+
 Open `http://localhost:3000`.
+
+Interactive OpenAPI documentation is available at `http://localhost:3000/swagger`.
+The raw OpenAPI 3.1 document is served from `http://localhost:3000/api/openapi`.
 
 Verify the database-backed health endpoint:
 
@@ -276,8 +286,8 @@ The Blueprint supplies `DATABASE_URL` from the provisioned Render PostgreSQL ins
 The configured deployment commands are:
 
 ```text
-Build: npm ci && npm run db:migrate && npm run db:seed && npm run build
-Start: npm start
+Build: npm ci && npm run build
+Start: npm run start:seeded
 Health check: /api/health
 ```
 
