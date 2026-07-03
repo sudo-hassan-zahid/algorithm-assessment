@@ -7,18 +7,19 @@ import { actionEvents, customers, escalations, orders, refunds, supportRequests 
 import { reviewEscalation } from "../src/server/escalations";
 import { executeRefund } from "../src/server/guardrails";
 
-if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required");
+async function main() {
+  if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required");
 
-const suffix = randomUUID().slice(0, 8);
-const customerId = randomUUID();
-const refundOrderId = `concurrency-refund-${suffix}`;
-const cancelOrderId = `concurrency-cancel-${suffix}`;
-const refundRequestIds = [randomUUID(), randomUUID()];
-const approvalRequestId = randomUUID();
-const escalationId = randomUUID();
-const requestIds = [...refundRequestIds, approvalRequestId];
+  const suffix = randomUUID().slice(0, 8);
+  const customerId = randomUUID();
+  const refundOrderId = `concurrency-refund-${suffix}`;
+  const cancelOrderId = `concurrency-cancel-${suffix}`;
+  const refundRequestIds = [randomUUID(), randomUUID()];
+  const approvalRequestId = randomUUID();
+  const escalationId = randomUUID();
+  const requestIds = [...refundRequestIds, approvalRequestId];
 
-try {
+  try {
   await db.insert(customers).values({ id: customerId, name: "Concurrency Probe", email: `probe-${suffix}@example.com` });
   await db.insert(orders).values([
     { id: refundOrderId, customerId, status: "DELIVERED", totalAmount: "100.00" },
@@ -57,13 +58,18 @@ try {
   }
 
   console.log("Concurrency checks passed: one refund and one approval executed.");
-} finally {
-  await db.delete(actionEvents).where(inArray(actionEvents.requestId, requestIds));
-  await db.delete(refunds).where(eq(refunds.orderId, refundOrderId));
-  await db.delete(escalations).where(eq(escalations.id, escalationId));
-  await db.delete(supportRequests).where(inArray(supportRequests.id, requestIds));
-  await db.delete(orders).where(inArray(orders.id, [refundOrderId, cancelOrderId]));
-  await db.delete(customers).where(eq(customers.id, customerId));
-  await pool.end();
+  } finally {
+    await db.delete(actionEvents).where(inArray(actionEvents.requestId, requestIds));
+    await db.delete(refunds).where(eq(refunds.orderId, refundOrderId));
+    await db.delete(escalations).where(eq(escalations.id, escalationId));
+    await db.delete(supportRequests).where(inArray(supportRequests.id, requestIds));
+    await db.delete(orders).where(inArray(orders.id, [refundOrderId, cancelOrderId]));
+    await db.delete(customers).where(eq(customers.id, customerId));
+    await pool.end();
+  }
 }
 
+main().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});

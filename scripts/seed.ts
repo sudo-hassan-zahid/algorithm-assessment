@@ -17,6 +17,7 @@ const customerIds = {
   noah: "22222222-2222-4222-8222-222222222222",
 };
 
+async function main() {
 await db
   .insert(customers)
   .values([
@@ -117,3 +118,10 @@ for (const [index, request] of requestSeeds.entries()) {
 
 await pool.end();
 console.log("Seed data ready.");
+}
+
+main().catch(async (error) => {
+  console.error(error);
+  await pool.end();
+  process.exitCode = 1;
+});
