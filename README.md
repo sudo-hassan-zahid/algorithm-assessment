@@ -1,18 +1,18 @@
 # Relay Support Operations Console
 
-Relay is a reviewer-first ecommerce support console backed by a real OpenAI tool-calling loop. It handles refund proposals, safe automatic cancellations, escalation review, and a complete database audit trail.
+Relay is a reviewer-first ecommerce support console backed by a real Groq tool-calling loop. It handles refund proposals, safe automatic cancellations, escalation review, and a complete database audit trail.
 
 ## Stack
 
 - Next.js 16 and TypeScript
 - PostgreSQL 17 with Drizzle ORM
-- OpenAI Responses API
+- Groq Responses API through its OpenAI-compatible endpoint
 - SWR for concurrent UI refresh
 - Vitest for policy tests
 
 ## Local setup
 
-Requirements: Node.js 22+, PostgreSQL 17+, and an OpenAI API key.
+Requirements: Node.js 22+, PostgreSQL 17+, and a free Groq API key.
 
 ```bash
 cp .env.example .env
@@ -51,7 +51,7 @@ The exact enforcement paths are documented in [ARCHITECTURE.md](./ARCHITECTURE.m
 
 ## Deployment
 
-`render.yaml` provisions the web service and PostgreSQL database on Render. Create a Blueprint from the repository and provide `OPENAI_API_KEY`; migrations and seed data run during the build.
+`render.yaml` provisions the web service and PostgreSQL database on Render. Create a Blueprint from the repository and provide `GROQ_API_KEY`; migrations and seed data run during the build.
 
 For another platform, use:
 

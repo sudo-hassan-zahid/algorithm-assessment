@@ -7,7 +7,7 @@ This guide covers local setup, automated verification, manual acceptance testing
 - Node.js 22 or newer
 - npm
 - PostgreSQL 17 or newer
-- A funded OpenAI API project and API key
+- A Groq account and API key
 - A GitHub account with access to the repository
 - A Render account connected to GitHub
 
@@ -23,8 +23,8 @@ Set the following values in `.env`:
 
 ```env
 DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@localhost:5432/support_ops
-OPENAI_API_KEY=YOUR_OPENAI_API_KEY
-OPENAI_MODEL=gpt-4.1-mini
+GROQ_API_KEY=YOUR_GROQ_API_KEY
+GROQ_MODEL=openai/gpt-oss-20b
 ```
 
 Keep `.env` private. It is ignored by Git and must never be committed.
@@ -267,7 +267,7 @@ The repository contains `render.yaml`, which defines a Node.js web service and P
 3. Select **New → Blueprint**.
 4. Choose `sudo-hassan-zahid/algorithm-assessment`.
 5. Confirm that Render detects `render.yaml`.
-6. Provide `OPENAI_API_KEY` when prompted.
+6. Provide `GROQ_API_KEY` when prompted.
 7. Apply the Blueprint.
 8. Wait for the database, migrations, seed, build, and web service deployment to finish.
 
@@ -298,7 +298,7 @@ Expected response:
 Then verify:
 
 - The queue loads seeded requests.
-- A new request invokes the OpenAI agent.
+- A new request invokes the Groq-hosted agent.
 - Tool calls appear in the audit trail.
 - A valid refund requires approval.
 - A valid processing-order cancellation executes automatically.
@@ -311,7 +311,7 @@ Free Render services can sleep after inactivity, and free PostgreSQL instances a
 ## 12. Final submission checklist
 
 - [ ] Local application starts successfully.
-- [ ] OpenAI-powered requests complete successfully.
+- [ ] Groq-powered requests complete successfully.
 - [ ] Formatting, typecheck, lint, tests, and production build pass.
 - [ ] Database concurrency probe passes.
 - [ ] Manual guardrail scenarios pass.

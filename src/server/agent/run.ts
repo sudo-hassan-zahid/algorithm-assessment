@@ -46,17 +46,20 @@ export async function processSupportRequest(requestId: string) {
     .where(eq(supportRequests.id, requestId))
     .limit(1);
 
-  const model = process.env.OPENAI_MODEL ?? "gpt-4.1-mini";
+  const model = process.env.GROQ_MODEL ?? "openai/gpt-oss-20b";
   const [run] = await db
     .insert(agentRuns)
     .values({ requestId, model })
     .returning();
 
   try {
-    if (!process.env.OPENAI_API_KEY)
-      throw new Error("OPENAI_API_KEY is not configured");
+    if (!process.env.GROQ_API_KEY)
+      throw new Error("GROQ_API_KEY is not configured");
 
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    const groq = new OpenAI({
+      apiKey: process.env.GROQ_API_KEY,
+      baseURL: "https://api.groq.com/openai/v1",
+    });
     const input: ResponseInput = [
       {
         role: "user",
@@ -66,7 +69,7 @@ export async function processSupportRequest(requestId: string) {
     let finalOutcome = "";
 
     for (let round = 0; round < MAX_TOOL_ROUNDS; round += 1) {
-      const response = await openai.responses.create({
+      const response = await groq.responses.create({
         model,
         instructions,
         input,

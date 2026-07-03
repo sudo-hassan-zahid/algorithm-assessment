@@ -16,7 +16,7 @@ services:
         fromDatabase:
           name: relay-db
           property: connectionString
-      - key: OPENAI_API_KEY
+      - key: GROQ_API_KEY
         sync: false
-      - key: OPENAI_MODEL
-        value: gpt-4.1-mini
+      - key: GROQ_MODEL
+        value: openai/gpt-oss-20b
