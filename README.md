@@ -61,12 +61,11 @@ For another platform, use:
 
 ## API surface
 
-| Method | Route | Purpose |
-| --- | --- | --- |
-| `GET` | `/api/requests` | Queue snapshot |
-| `POST` | `/api/requests` | Create and process a customer request |
-| `GET` | `/api/requests/:id` | Decision, order, trace, and audit detail |
+| Method | Route                         | Purpose                                    |
+| ------ | ----------------------------- | ------------------------------------------ |
+| `GET`  | `/api/requests`               | Queue snapshot                             |
+| `POST` | `/api/requests`               | Create and process a customer request      |
+| `GET`  | `/api/requests/:id`           | Decision, order, trace, and audit detail   |
 | `POST` | `/api/escalations/:id/review` | Atomically approve or reject an escalation |
-| `GET` | `/api/customers` | Seeded intake customers |
-| `GET` | `/api/health` | Database-backed health check |
-
+| `GET`  | `/api/customers`              | Seeded intake customers                    |
+| `GET`  | `/api/health`                 | Database-backed health check               |

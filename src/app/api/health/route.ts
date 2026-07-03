@@ -8,4 +8,3 @@ export async function GET() {
     return Response.json({ status: "unavailable" }, { status: 503 });
   }
 }
-

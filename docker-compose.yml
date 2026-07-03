@@ -17,4 +17,3 @@ services:
 
 volumes:
   support_ops_data:
-

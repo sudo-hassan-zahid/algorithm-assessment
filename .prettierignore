@@ -1,0 +1,9 @@
+.next/
+node_modules/
+coverage/
+drizzle/meta/
+package-lock.json
+requirements.txt
+*interview-question*
+*interview_questions*
+

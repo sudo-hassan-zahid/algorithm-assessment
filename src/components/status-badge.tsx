@@ -9,6 +9,9 @@ const labels: Record<string, string> = {
 };
 
 export function StatusBadge({ status }: { status: string }) {
-  return <span className={`status status--${status.toLowerCase()}`}>{labels[status] ?? status}</span>;
+  return (
+    <span className={`status status--${status.toLowerCase()}`}>
+      {labels[status] ?? status}
+    </span>
+  );
 }
-

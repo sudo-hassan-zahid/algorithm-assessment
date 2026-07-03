@@ -29,7 +29,12 @@ export async function processSupportRequest(requestId: string) {
   const [claimed] = await db
     .update(supportRequests)
     .set({ status: "PROCESSING", updatedAt: new Date() })
-    .where(and(eq(supportRequests.id, requestId), eq(supportRequests.status, "PENDING")))
+    .where(
+      and(
+        eq(supportRequests.id, requestId),
+        eq(supportRequests.status, "PENDING"),
+      ),
+    )
     .returning();
 
   if (!claimed || claimed.status !== "PROCESSING") return claimed ?? null;
@@ -42,10 +47,14 @@ export async function processSupportRequest(requestId: string) {
     .limit(1);
 
   const model = process.env.OPENAI_MODEL ?? "gpt-4.1-mini";
-  const [run] = await db.insert(agentRuns).values({ requestId, model }).returning();
+  const [run] = await db
+    .insert(agentRuns)
+    .values({ requestId, model })
+    .returning();
 
   try {
-    if (!process.env.OPENAI_API_KEY) throw new Error("OPENAI_API_KEY is not configured");
+    if (!process.env.OPENAI_API_KEY)
+      throw new Error("OPENAI_API_KEY is not configured");
 
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
     const input: ResponseInput = [
@@ -57,15 +66,26 @@ export async function processSupportRequest(requestId: string) {
     let finalOutcome = "";
 
     for (let round = 0; round < MAX_TOOL_ROUNDS; round += 1) {
-      const response = await openai.responses.create({ model, instructions, input, tools: agentTools });
+      const response = await openai.responses.create({
+        model,
+        instructions,
+        input,
+        tools: agentTools,
+      });
       input.push(...(response.output as unknown as ResponseInput));
       finalOutcome = response.output_text || finalOutcome;
 
-      const calls = response.output.filter((item) => item.type === "function_call");
+      const calls = response.output.filter(
+        (item) => item.type === "function_call",
+      );
       if (!calls.length) break;
 
       for (const call of calls) {
-        const result = await executeAgentTool(requestId, call.name, call.arguments);
+        const result = await executeAgentTool(
+          requestId,
+          call.name,
+          call.arguments,
+        );
         await db.insert(toolCalls).values({
           agentRunId: run.id,
           providerCallId: call.call_id,
@@ -74,7 +94,11 @@ export async function processSupportRequest(requestId: string) {
           result,
           status: result.ok ? "SUCCEEDED" : "FAILED",
         });
-        input.push({ type: "function_call_output", call_id: call.call_id, output: JSON.stringify(result) });
+        input.push({
+          type: "function_call_output",
+          call_id: call.call_id,
+          output: JSON.stringify(result),
+        });
       }
     }
 
@@ -87,7 +111,8 @@ export async function processSupportRequest(requestId: string) {
       await createEscalation({
         requestId,
         action: "OTHER",
-        reason: "The agent did not reach a safely executable decision within its tool budget.",
+        reason:
+          "The agent did not reach a safely executable decision within its tool budget.",
       });
     }
 
@@ -106,7 +131,8 @@ export async function processSupportRequest(requestId: string) {
       await createEscalation({
         requestId,
         action: "OTHER",
-        reason: "Automated processing failed; a human must review this request.",
+        reason:
+          "Automated processing failed; a human must review this request.",
       });
     }
     await db
@@ -115,6 +141,10 @@ export async function processSupportRequest(requestId: string) {
       .where(eq(agentRuns.id, run.id));
   }
 
-  const [result] = await db.select().from(supportRequests).where(eq(supportRequests.id, requestId)).limit(1);
+  const [result] = await db
+    .select()
+    .from(supportRequests)
+    .where(eq(supportRequests.id, requestId))
+    .limit(1);
   return result;
 }

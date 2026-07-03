@@ -22,7 +22,11 @@ export async function listSupportRequests() {
       decisionReason: supportRequests.decisionReason,
       createdAt: supportRequests.createdAt,
       updatedAt: supportRequests.updatedAt,
-      customer: { id: customers.id, name: customers.name, email: customers.email },
+      customer: {
+        id: customers.id,
+        name: customers.name,
+        email: customers.email,
+      },
       escalation: {
         id: escalations.id,
         status: escalations.status,
@@ -46,7 +50,11 @@ export async function getSupportRequest(id: string) {
       decisionReason: supportRequests.decisionReason,
       createdAt: supportRequests.createdAt,
       updatedAt: supportRequests.updatedAt,
-      customer: { id: customers.id, name: customers.name, email: customers.email },
+      customer: {
+        id: customers.id,
+        name: customers.name,
+        email: customers.email,
+      },
     })
     .from(supportRequests)
     .innerJoin(customers, eq(customers.id, supportRequests.customerId))
@@ -76,24 +84,48 @@ export async function getSupportRequest(id: string) {
       .leftJoin(orders, eq(orders.id, escalations.orderId))
       .where(eq(escalations.requestId, id))
       .limit(1),
-    db.select().from(agentRuns).where(eq(agentRuns.requestId, id)).orderBy(asc(agentRuns.startedAt)),
-    db.select().from(actionEvents).where(eq(actionEvents.requestId, id)).orderBy(asc(actionEvents.createdAt)),
+    db
+      .select()
+      .from(agentRuns)
+      .where(eq(agentRuns.requestId, id))
+      .orderBy(asc(agentRuns.startedAt)),
+    db
+      .select()
+      .from(actionEvents)
+      .where(eq(actionEvents.requestId, id))
+      .orderBy(asc(actionEvents.createdAt)),
   ]);
 
   const calls = runs.length
     ? await db
         .select()
         .from(toolCalls)
-        .where(inArray(toolCalls.agentRunId, runs.map((run) => run.id)))
+        .where(
+          inArray(
+            toolCalls.agentRunId,
+            runs.map((run) => run.id),
+          ),
+        )
         .orderBy(asc(toolCalls.createdAt))
     : [];
   const refund = escalation[0]?.order?.id
-    ? (
-        await db.select().from(refunds).where(eq(refunds.orderId, escalation[0].order.id)).limit(1)
-      )[0] ?? null
+    ? ((
+        await db
+          .select()
+          .from(refunds)
+          .where(eq(refunds.orderId, escalation[0].order.id))
+          .limit(1)
+      )[0] ?? null)
     : null;
 
-  return { ...request, escalation: escalation[0] ?? null, agentRuns: runs, toolCalls: calls, events, refund };
+  return {
+    ...request,
+    escalation: escalation[0] ?? null,
+    agentRuns: runs,
+    toolCalls: calls,
+    events,
+    refund,
+  };
 }
 
 export function listCustomers() {

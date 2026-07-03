@@ -62,4 +62,3 @@ The current request route performs the agent run synchronously for a small asses
 The explicit loop is intentionally small and inspectable. I would keep it while the tool set is modest, then evaluate an agent framework only if durable orchestration, evaluation hooks, or multi-agent routing justify its abstraction cost. Payments and fulfillment would call provider APIs with their own idempotency keys rather than treating the local row as proof of an external refund.
 
 For operations I would add OpenTelemetry traces, structured logs with request/run IDs, Sentry, metrics for escalation rate and guardrail rejections, encrypted secrets, retention controls, reviewer authentication with RBAC, and immutable audit export. Managed PostgreSQL with point-in-time recovery, connection pooling, private networking, and automated backups would replace the assessment database. Rate limiting, CSRF protection, and verified customer identity would sit ahead of public intake.
-

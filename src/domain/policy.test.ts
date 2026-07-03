@@ -15,16 +15,27 @@ function expectCode(action: () => void, code: string) {
 
 describe("refund policy", () => {
   it("accepts a refund up to the paid amount", () => {
-    expect(() => assertRefundAllowed("DELIVERED", "100.00", "100.00")).not.toThrow();
+    expect(() =>
+      assertRefundAllowed("DELIVERED", "100.00", "100.00"),
+    ).not.toThrow();
   });
 
   it("rejects over-refunds and non-positive amounts", () => {
-    expectCode(() => assertRefundAllowed("DELIVERED", "100.00", "100.01"), "INVALID_REFUND_AMOUNT");
-    expectCode(() => assertRefundAllowed("DELIVERED", "100.00", "0"), "INVALID_REFUND_AMOUNT");
+    expectCode(
+      () => assertRefundAllowed("DELIVERED", "100.00", "100.01"),
+      "INVALID_REFUND_AMOUNT",
+    );
+    expectCode(
+      () => assertRefundAllowed("DELIVERED", "100.00", "0"),
+      "INVALID_REFUND_AMOUNT",
+    );
   });
 
   it("rejects refunds for cancelled orders", () => {
-    expectCode(() => assertRefundAllowed("CANCELLED", "100.00", "50.00"), "ORDER_CANCELLED");
+    expectCode(
+      () => assertRefundAllowed("CANCELLED", "100.00", "50.00"),
+      "ORDER_CANCELLED",
+    );
   });
 });
 
@@ -33,8 +44,13 @@ describe("cancellation policy", () => {
     expect(() => assertCancellationAllowed("PROCESSING")).not.toThrow();
   });
 
-  it.each(["SHIPPED", "DELIVERED", "CANCELLED"])("rejects %s orders", (status) => {
-    expectCode(() => assertCancellationAllowed(status), "ORDER_NOT_CANCELLABLE");
-  });
+  it.each(["SHIPPED", "DELIVERED", "CANCELLED"])(
+    "rejects %s orders",
+    (status) => {
+      expectCode(
+        () => assertCancellationAllowed(status),
+        "ORDER_NOT_CANCELLABLE",
+      );
+    },
+  );
 });
-

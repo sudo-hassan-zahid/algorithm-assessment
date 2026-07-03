@@ -30,16 +30,34 @@ export const requestStatus = pgEnum("request_status", [
   "FAILED",
 ]);
 
-export const runStatus = pgEnum("run_status", ["RUNNING", "COMPLETED", "FAILED"]);
-export const toolCallStatus = pgEnum("tool_call_status", ["SUCCEEDED", "FAILED"]);
-export const escalationStatus = pgEnum("escalation_status", ["PENDING", "APPROVED", "REJECTED"]);
-export const actionType = pgEnum("action_type", ["REFUND", "CANCEL", "REPLACEMENT", "OTHER"]);
+export const runStatus = pgEnum("run_status", [
+  "RUNNING",
+  "COMPLETED",
+  "FAILED",
+]);
+export const toolCallStatus = pgEnum("tool_call_status", [
+  "SUCCEEDED",
+  "FAILED",
+]);
+export const escalationStatus = pgEnum("escalation_status", [
+  "PENDING",
+  "APPROVED",
+  "REJECTED",
+]);
+export const actionType = pgEnum("action_type", [
+  "REFUND",
+  "CANCEL",
+  "REPLACEMENT",
+  "OTHER",
+]);
 
 export const customers = pgTable("customers", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
 });
 
 export const orders = pgTable(
@@ -53,8 +71,12 @@ export const orders = pgTable(
     totalAmount: numeric("total_amount", { precision: 12, scale: 2 }).notNull(),
     currency: text("currency").notNull().default("USD"),
     version: integer("version").notNull().default(1),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
   },
   (table) => [
     index("orders_customer_idx").on(table.customerId),
@@ -73,12 +95,22 @@ export const supportRequests = pgTable(
     status: requestStatus("status").notNull().default("PENDING"),
     decision: text("decision"),
     decisionReason: text("decision_reason"),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
   },
   (table) => [
-    index("support_requests_status_created_idx").on(table.status, table.createdAt),
-    check("support_requests_message_length", sql`length(${table.message}) between 3 and 2000`),
+    index("support_requests_status_created_idx").on(
+      table.status,
+      table.createdAt,
+    ),
+    check(
+      "support_requests_message_length",
+      sql`length(${table.message}) between 3 and 2000`,
+    ),
   ],
 );
 
@@ -93,7 +125,9 @@ export const agentRuns = pgTable(
     status: runStatus("status").notNull().default("RUNNING"),
     finalOutcome: text("final_outcome"),
     error: text("error"),
-    startedAt: timestamp("started_at", { withTimezone: true }).notNull().defaultNow(),
+    startedAt: timestamp("started_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
     finishedAt: timestamp("finished_at", { withTimezone: true }),
   },
   (table) => [index("agent_runs_request_idx").on(table.requestId)],
@@ -111,10 +145,15 @@ export const toolCalls = pgTable(
     arguments: jsonb("arguments").notNull(),
     result: jsonb("result").notNull(),
     status: toolCallStatus("status").notNull(),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
   },
   (table) => [
-    uniqueIndex("tool_calls_run_provider_call_key").on(table.agentRunId, table.providerCallId),
+    uniqueIndex("tool_calls_run_provider_call_key").on(
+      table.agentRunId,
+      table.providerCallId,
+    ),
   ],
 );
 
@@ -132,8 +171,12 @@ export const escalations = pgTable(
     status: escalationStatus("status").notNull().default("PENDING"),
     reviewedBy: text("reviewed_by"),
     reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
   },
   (table) => [
     uniqueIndex("escalations_request_key").on(table.requestId),
@@ -153,7 +196,9 @@ export const refunds = pgTable(
       .references(() => supportRequests.id),
     amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
     currency: text("currency").notNull(),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
   },
   (table) => [
     uniqueIndex("refunds_order_key").on(table.orderId),
@@ -173,10 +218,15 @@ export const actionEvents = pgTable(
     actorId: text("actor_id"),
     eventType: text("event_type").notNull(),
     details: jsonb("details").notNull().default({}),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
   },
   (table) => [
-    index("action_events_request_created_idx").on(table.requestId, table.createdAt),
+    index("action_events_request_created_idx").on(
+      table.requestId,
+      table.createdAt,
+    ),
     check(
       "action_events_actor_type_valid",
       sql`${table.actorType} in ('CUSTOMER', 'AGENT', 'REVIEWER', 'SYSTEM')`,

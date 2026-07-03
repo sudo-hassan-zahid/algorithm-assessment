@@ -13,7 +13,10 @@ export async function POST(request: Request) {
   try {
     const input = createRequestSchema.parse(await request.json());
     const created = await db.transaction(async (tx) => {
-      const [supportRequest] = await tx.insert(supportRequests).values(input).returning();
+      const [supportRequest] = await tx
+        .insert(supportRequests)
+        .values(input)
+        .returning();
       await tx.insert(actionEvents).values({
         requestId: supportRequest.id,
         actorType: "CUSTOMER",
@@ -31,4 +34,3 @@ export async function POST(request: Request) {
     return Response.json({ error: errorMessage(error) }, { status });
   }
 }
-

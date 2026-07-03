@@ -9,4 +9,3 @@ export const reviewSchema = z.object({
   decision: z.enum(["APPROVE", "REJECT"]),
   reviewer: z.string().trim().min(2).max(100),
 });
-

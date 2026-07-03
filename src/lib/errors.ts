@@ -11,6 +11,7 @@ export class AppError extends Error {
 }
 
 export function errorMessage(error: unknown) {
-  return error instanceof Error ? error.message : "An unexpected error occurred";
+  return error instanceof Error
+    ? error.message
+    : "An unexpected error occurred";
 }
-

@@ -28,7 +28,8 @@ export const agentTools = [
   {
     type: "function" as const,
     name: "get_order",
-    description: "Retrieve an order only when it belongs to the customer who made this request.",
+    description:
+      "Retrieve an order only when it belongs to the customer who made this request.",
     strict: true,
     parameters: {
       type: "object",
@@ -40,7 +41,8 @@ export const agentTools = [
   {
     type: "function" as const,
     name: "request_refund",
-    description: "Validate and send a refund proposal to mandatory human review. This never issues a refund.",
+    description:
+      "Validate and send a refund proposal to mandatory human review. This never issues a refund.",
     strict: true,
     parameters: {
       type: "object",
@@ -56,7 +58,8 @@ export const agentTools = [
   {
     type: "function" as const,
     name: "cancel_order",
-    description: "Cancel a verified order automatically only if it is still in PROCESSING state.",
+    description:
+      "Cancel a verified order automatically only if it is still in PROCESSING state.",
     strict: true,
     parameters: {
       type: "object",
@@ -71,13 +74,17 @@ export const agentTools = [
   {
     type: "function" as const,
     name: "escalate_request",
-    description: "Escalate ambiguity, unsafe operations, unsupported actions, or cases requiring judgment.",
+    description:
+      "Escalate ambiguity, unsafe operations, unsupported actions, or cases requiring judgment.",
     strict: true,
     parameters: {
       type: "object",
       properties: {
         order_id: { type: ["string", "null"] },
-        action: { type: "string", enum: ["REFUND", "CANCEL", "REPLACEMENT", "OTHER"] },
+        action: {
+          type: "string",
+          enum: ["REFUND", "CANCEL", "REPLACEMENT", "OTHER"],
+        },
         proposed_amount: { type: ["number", "null"] },
         reason: { type: "string" },
       },
@@ -87,7 +94,11 @@ export const agentTools = [
   },
 ];
 
-export async function executeAgentTool(requestId: string, name: string, rawArguments: string) {
+export async function executeAgentTool(
+  requestId: string,
+  name: string,
+  rawArguments: string,
+) {
   try {
     const args: unknown = JSON.parse(rawArguments);
 
@@ -98,21 +109,28 @@ export async function executeAgentTool(requestId: string, name: string, rawArgum
         .where(eq(supportRequests.id, requestId))
         .limit(1);
       if (!request || request.status !== "PROCESSING") {
-        return { ok: false, code: "REQUEST_ALREADY_FINALIZED", status: request?.status ?? "NOT_FOUND" };
+        return {
+          ok: false,
+          code: "REQUEST_ALREADY_FINALIZED",
+          status: request?.status ?? "NOT_FOUND",
+        };
       }
     }
 
     if (name === "get_order") {
       const { order_id } = getOrderSchema.parse(args);
       const order = await inspectOwnedOrder(requestId, order_id);
-      return order ? { ok: true, order } : { ok: false, code: "ORDER_NOT_FOUND_OR_NOT_OWNED" };
+      return order
+        ? { ok: true, order }
+        : { ok: false, code: "ORDER_NOT_FOUND_OR_NOT_OWNED" };
     }
 
     if (name === "request_refund") {
       const { order_id, amount, reason } = refundSchema.parse(args);
       const order = await inspectOwnedOrder(requestId, order_id);
       if (!order) return { ok: false, code: "ORDER_NOT_FOUND_OR_NOT_OWNED" };
-      if (amount > Number(order.totalAmount)) return { ok: false, code: "AMOUNT_EXCEEDS_PAYMENT" };
+      if (amount > Number(order.totalAmount))
+        return { ok: false, code: "AMOUNT_EXCEEDS_PAYMENT" };
       const [existingRefund] = await db
         .select({ id: refunds.id })
         .from(refunds)
@@ -135,8 +153,18 @@ export async function executeAgentTool(requestId: string, name: string, rawArgum
       await executeCancellation(requestId, order_id, { type: "AGENT" });
       await db
         .update(supportRequests)
-        .set({ status: "AUTO_EXECUTED", decision: "CANCEL", decisionReason: reason, updatedAt: new Date() })
-        .where(and(eq(supportRequests.id, requestId), eq(supportRequests.status, "PROCESSING")));
+        .set({
+          status: "AUTO_EXECUTED",
+          decision: "CANCEL",
+          decisionReason: reason,
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(supportRequests.id, requestId),
+            eq(supportRequests.status, "PROCESSING"),
+          ),
+        );
       return { ok: true, outcome: "AUTO_EXECUTED" };
     }
 

@@ -2,12 +2,16 @@
   "name": "support-operations-console",
   "version": "0.1.0",
   "private": true,
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -44,6 +48,7 @@
     "eslint": "^9.39.4",
     "eslint-config-next": "16.2.10",
     "jsdom": "^28.1.0",
+    "prettier": "^3.9.4",
     "tailwindcss": "^4.2.2",
     "tsx": "^4.23.0",
     "typescript": "^5.9.3",
