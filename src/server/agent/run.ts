@@ -97,11 +97,18 @@ export async function processSupportRequest(requestId: string) {
       .where(eq(agentRuns.id, run.id));
   } catch (error) {
     const message = errorMessage(error);
-    await createEscalation({
-      requestId,
-      action: "OTHER",
-      reason: "Automated processing failed; a human must review this request.",
-    });
+    const [current] = await db
+      .select({ status: supportRequests.status })
+      .from(supportRequests)
+      .where(eq(supportRequests.id, requestId))
+      .limit(1);
+    if (current?.status === "PROCESSING") {
+      await createEscalation({
+        requestId,
+        action: "OTHER",
+        reason: "Automated processing failed; a human must review this request.",
+      });
+    }
     await db
       .update(agentRuns)
       .set({ status: "FAILED", error: message, finishedAt: new Date() })

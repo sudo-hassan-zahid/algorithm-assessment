@@ -24,12 +24,18 @@ export async function createEscalation(input: EscalationInput) {
   }
 
   return db.transaction(async (tx) => {
+    const lockedRequest = await tx.execute<{ status: string }>(
+      sql`SELECT status FROM support_requests WHERE id = ${input.requestId} FOR UPDATE`,
+    );
     const [existing] = await tx
       .select()
       .from(escalations)
       .where(eq(escalations.requestId, input.requestId))
       .limit(1);
     if (existing) return existing;
+    if (lockedRequest.rows[0]?.status !== "PROCESSING") {
+      throw new AppError("REQUEST_ALREADY_FINALIZED", "This request has already reached a final state", 409);
+    }
 
     const [escalation] = await tx.insert(escalations).values(input).returning();
     await tx

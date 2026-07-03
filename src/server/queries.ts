@@ -1,4 +1,4 @@
-import { asc, desc, eq } from "drizzle-orm";
+import { asc, desc, eq, inArray } from "drizzle-orm";
 
 import { db } from "@/db";
 import {
@@ -81,7 +81,11 @@ export async function getSupportRequest(id: string) {
   ]);
 
   const calls = runs.length
-    ? await db.select().from(toolCalls).where(eq(toolCalls.agentRunId, runs[0].id)).orderBy(asc(toolCalls.createdAt))
+    ? await db
+        .select()
+        .from(toolCalls)
+        .where(inArray(toolCalls.agentRunId, runs.map((run) => run.id)))
+        .orderBy(asc(toolCalls.createdAt))
     : [];
   const refund = escalation[0]?.order?.id
     ? (
@@ -95,4 +99,3 @@ export async function getSupportRequest(id: string) {
 export function listCustomers() {
   return db.select().from(customers).orderBy(asc(customers.name));
 }
-
