@@ -13,8 +13,14 @@ Relay is a reviewer-first ecommerce support console backed by a real Groq tool-c
 
 ## Local setup
 
-Requirements: Docker and a free Groq API key. Copy `.env.example` to `.env`, add
-your `GROQ_API_KEY`, then start the complete stack:
+Requirements: Docker, Node.js 22+, npm, and a free Groq API key.
+
+Copy `.env.example` to `.env`, add your `GROQ_API_KEY`, then choose one of the
+two local workflows below.
+
+### Option 1: simplest full-container startup
+
+Start the complete stack:
 
 ```bash
 cp .env.example .env
@@ -22,23 +28,60 @@ docker compose up --build
 ```
 
 After that one-time API key configuration, `docker compose up --build` is the
-only setup and startup command. Do not run `npm install` on the host for the
-containerized workflow.
+only setup and startup command. Do not run `npm install` on the host for this
+fully containerized workflow.
 
 Open `http://localhost:3000`. Compose installs the application, waits for
 PostgreSQL, applies migrations, loads the idempotent demo seed, and starts the
 server. New requests invoke the configured model.
 
-For host-based development with hot reload, run:
+### Option 2: Compose for DB, host app for hot reload
+
+This repo is one Next.js app, so the frontend and backend are served by the
+same dev process. Use Docker Compose just for PostgreSQL, then run the app on
+the host:
+
+Install dependencies once:
 
 ```bash
-docker compose up postgres -d
 npm install
+```
+
+Then start the app with the script that matches your OS:
+
+Linux or macOS:
+
+```bash
+bash ./dev.sh
+```
+
+Windows PowerShell:
+
+```powershell
+.\dev.ps1
+```
+
+Windows Command Prompt:
+
+```bat
+dev.bat
+```
+
+`dev.sh`, `dev.ps1`, and `dev.bat` start the `postgres` service and then run
+`npm run dev`. The `predev` hook automatically waits for PostgreSQL, runs
+migrations, and loads the idempotent seed before Next.js starts.
+
+If you prefer not to use the script, the equivalent commands are:
+
+```bash
+docker compose up -d postgres
 npm run dev
 ```
 
-`npm run dev` automatically migrates and seeds the database before Next.js
-starts. `npm start` automatically runs migrations without loading demo data.
+The host-based workflow expects the Compose PostgreSQL container on port `5777`
+to avoid colliding with an existing local PostgreSQL server on `5432`.
+
+`npm start` automatically runs migrations without loading demo data.
 
 ## Verification
 

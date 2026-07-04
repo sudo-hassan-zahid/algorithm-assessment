@@ -22,7 +22,7 @@ Copy-Item .env.example .env
 Set the following values in `.env`:
 
 ```env
-DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@localhost:5432/support_ops
+DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@localhost:5777/support_ops
 GROQ_API_KEY=YOUR_GROQ_API_KEY
 GROQ_MODEL=openai/gpt-oss-20b
 ```
@@ -41,12 +41,16 @@ createdb -U postgres support_ops
 
 If `createdb` is unavailable or authentication fails, create a database named `support_ops` through pgAdmin using the same PostgreSQL user and password configured in `.env`.
 
-Alternatively, start only the included PostgreSQL container, then install dependencies:
+Alternatively, keep local setup simple: use Docker Compose for PostgreSQL and
+run the app on the host. Install dependencies once:
 
 ```powershell
-docker compose up postgres -d
 npm install
 ```
+
+This application is a single Next.js server, so the frontend and backend do not
+run as separate local processes. The UI and API routes both come up through
+`npm run dev`.
 
 When using Docker for the entire stack instead, run `docker compose up --build`
 and skip the next step; it is the only setup/start command after `.env` is
@@ -64,12 +68,43 @@ The seed creates two customers and several orders:
 
 ## 3. Start the application
 
+Use the included startup script that matches your OS to start PostgreSQL and the
+app together.
+
+Linux or macOS:
+
+```bash
+bash ./dev.sh
+```
+
+Windows PowerShell:
+
 ```powershell
+.\dev.ps1
+```
+
+Windows Command Prompt:
+
+```bat
+dev.bat
+```
+
+`dev.sh`, `dev.ps1`, and `dev.bat` run `docker compose up -d postgres` and then
+`npm run dev`.
+
+The `predev` hook applies migrations and loads the idempotent seed before the
+server starts, and it now waits for PostgreSQL to accept connections before
+running migrations.
+
+If you prefer running the commands manually, the equivalent flow is:
+
+```powershell
+docker compose up -d postgres
 npm run dev
 ```
 
-The `predev` hook applies migrations and loads the idempotent seed before the
-server starts.
+For the Compose-backed host workflow, PostgreSQL is exposed on port `5777` so it
+does not clash with a local PostgreSQL installation already using `5432`.
 
 Open `http://localhost:3000`.
 
