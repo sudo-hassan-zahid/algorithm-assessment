@@ -480,6 +480,22 @@ dt {
   margin-bottom: 14px;
 }
 
+.queue-card__signal--refund {
+  background: rgba(255, 179, 77, 0.18);
+}
+
+.queue-card__signal--cancel {
+  background: rgba(71, 187, 135, 0.18);
+}
+
+.queue-card__signal--replacement {
+  background: rgba(125, 108, 255, 0.18);
+}
+
+.queue-card__signal--other {
+  background: rgba(16, 33, 30, 0.08);
+}
+
 .queue-card:not(.queue-card--active) .queue-card__signal {
   background: rgba(255, 255, 255, 0.07);
 }
@@ -491,6 +507,18 @@ dt {
   letter-spacing: 0.04em;
   margin-bottom: 7px;
   opacity: 0.78;
+}
+
+.queue-card__signal--refund strong {
+  color: #9b5b10;
+}
+
+.queue-card__signal--cancel strong {
+  color: #1d7a56;
+}
+
+.queue-card__signal--replacement strong {
+  color: #5b4bc7;
 }
 
 .queue-card__signal span {
@@ -658,9 +686,24 @@ dt {
   background: linear-gradient(135deg, #fff1d5 0%, #ffdca8 100%);
 }
 
-.hero-card--neutral {
+.hero-card--processing {
   color: white;
-  background: linear-gradient(135deg, #253f39 0%, #355850 100%);
+  background: linear-gradient(135deg, #38508f 0%, #5e7bc7 100%);
+}
+
+.hero-card--approved {
+  color: white;
+  background: linear-gradient(135deg, #1d5f47 0%, #2f8b68 100%);
+}
+
+.hero-card--rejected {
+  color: white;
+  background: linear-gradient(135deg, #7a2e29 0%, #b14a42 100%);
+}
+
+.hero-card--failed {
+  color: white;
+  background: linear-gradient(135deg, #534646 0%, #7b6161 100%);
 }
 
 .hero-card--customer {
@@ -802,6 +845,27 @@ dt {
   background: var(--violet-soft);
 }
 
+.icon-tile--refund {
+  color: var(--amber);
+  background: var(--amber-soft);
+}
+
+.icon-tile--cancel {
+  color: var(--green);
+  background: var(--green-soft);
+}
+
+.icon-tile--replacement,
+.icon-tile--other {
+  color: var(--violet);
+  background: var(--violet-soft);
+}
+
+.icon-tile--order {
+  color: #3a5d8f;
+  background: #e7f0fb;
+}
+
 .icon-tile--amber {
   color: var(--amber);
   background: var(--amber-soft);
@@ -938,6 +1002,16 @@ dt {
   color: var(--amber);
 }
 
+.action-banner--approved {
+  background: var(--green-soft);
+  color: var(--green);
+}
+
+.action-banner--rejected {
+  background: var(--red-soft);
+  color: var(--red);
+}
+
 .action-banner strong,
 .action-banner span {
   display: block;
@@ -992,6 +1066,18 @@ dt {
   background: linear-gradient(145deg, #152623, #28443d);
 }
 
+.button--approve {
+  color: white;
+  background: linear-gradient(145deg, #17563f, #2b8865);
+  box-shadow: 0 10px 24px rgba(29, 122, 86, 0.22);
+}
+
+.button--reject {
+  color: var(--red);
+  background: #fff6f5;
+  border-color: #f3c8c3;
+}
+
 .button--secondary {
   background: white;
   border-color: var(--line);
@@ -1006,6 +1092,10 @@ dt {
   font-size: 12px;
   font-weight: 800;
   flex-wrap: wrap;
+}
+
+.reviewed-state--rejected {
+  color: var(--red);
 }
 
 .trace-list {

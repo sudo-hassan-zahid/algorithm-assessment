@@ -1,3 +1,6 @@
+/*
+ * Initializes the shared PostgreSQL pool and Drizzle client used by server code and scripts.
+ */
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 

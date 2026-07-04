@@ -1,3 +1,6 @@
+/*
+ * Defines the task-specific tools the model can call and maps them to guarded server actions.
+ */
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 

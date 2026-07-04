@@ -1,3 +1,6 @@
+/*
+ * Shapes the queue, request detail, and customer detail payloads consumed by the console UI.
+ */
 import { asc, desc, eq, inArray, sql } from "drizzle-orm";
 
 import { db } from "@/db";

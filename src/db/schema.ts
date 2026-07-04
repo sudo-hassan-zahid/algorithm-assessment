@@ -1,3 +1,6 @@
+/*
+ * Declares the PostgreSQL schema, enums, indexes, and integrity constraints for support operations.
+ */
 import { sql } from "drizzle-orm";
 import {
   check,

@@ -1,3 +1,6 @@
+/*
+ * Drives the model tool loop for one support request and persists agent runs plus tool-call traces.
+ */
 import { and, eq } from "drizzle-orm";
 import OpenAI from "openai";
 import type { ResponseInput } from "openai/resources/responses/responses";

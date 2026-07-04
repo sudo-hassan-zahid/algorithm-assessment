@@ -1,3 +1,6 @@
+/*
+ * Standard application error shape so routes and UI can rely on stable codes and HTTP statuses.
+ */
 export class AppError extends Error {
   constructor(
     public readonly code: string,

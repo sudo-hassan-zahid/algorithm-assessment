@@ -1,3 +1,6 @@
+/*
+ * Revalidates and executes refunds or cancellations under row locks instead of trusting model output.
+ */
 import { and, eq, sql } from "drizzle-orm";
 
 import { db } from "@/db";

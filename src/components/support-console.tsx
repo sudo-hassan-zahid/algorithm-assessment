@@ -1,3 +1,6 @@
+/*
+ * Reviewer console for support queue triage, customer context, and guarded escalation approval.
+ */
 "use client";
 
 import {
@@ -128,6 +131,27 @@ function requestBanner(detail: Detail) {
   return "Actively processing";
 }
 
+function heroTone(status: string) {
+  if (status === "APPROVED" || status === "AUTO_EXECUTED") return "approved";
+  if (status === "REJECTED") return "rejected";
+  if (status === "ESCALATED") return "alert";
+  if (status === "FAILED") return "failed";
+  return "processing";
+}
+
+function decisionTone(value: string | null) {
+  if (value === "REFUND") return "refund";
+  if (value === "CANCEL") return "cancel";
+  if (value === "REPLACEMENT") return "replacement";
+  return "other";
+}
+
+function escalationTone(status: string) {
+  if (status === "APPROVED") return "approved";
+  if (status === "REJECTED") return "rejected";
+  return "pending";
+}
+
 export function SupportConsole() {
   const [section, setSection] = useState<"REQUESTS" | "CUSTOMERS">("REQUESTS");
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -235,8 +259,12 @@ export function SupportConsole() {
             <span>
               Reviews <strong>{reviewCount}</strong>
             </span>
+            <HelpTip text="Live counts for the full queue and the subset still waiting on a human decision." />
           </div>
-          <span className="system-health">
+          <span
+            className="system-health"
+            title="Simple health indicator showing the app can currently reach its backend services."
+          >
             <i /> Systems operational
           </span>
           <button className="avatar" aria-label="Reviewer profile">
@@ -254,12 +282,14 @@ export function SupportConsole() {
           <button
             className={section === "REQUESTS" ? "active" : ""}
             onClick={() => setSection("REQUESTS")}
+            title="Open the reviewer queue with agent outcomes, escalations, and approval controls."
           >
             Support Queue
           </button>
           <button
             className={section === "CUSTOMERS" ? "active" : ""}
             onClick={() => setSection("CUSTOMERS")}
+            title="Open customer profiles and inspect their seeded order history."
           >
             Customers
           </button>
@@ -343,7 +373,9 @@ export function SupportConsole() {
                     <time>{relativeTime(item.createdAt)}</time>
                   </div>
                   <p>{item.message}</p>
-                  <div className="queue-card__signal">
+                  <div
+                    className={`queue-card__signal queue-card__signal--${decisionTone(item.decision)}`}
+                  >
                     <strong>{formatDecisionLabel(item.decision)}</strong>
                     <span>
                       {item.escalation?.reason ??
@@ -683,7 +715,7 @@ function RequestDetail({
       </div>
 
       <section
-        className={`hero-card ${detail.status === "ESCALATED" ? "hero-card--alert" : "hero-card--neutral"}`}
+        className={`hero-card hero-card--${heroTone(detail.status)}`}
       >
         <div>
           <span className="hero-card__label">{requestBanner(detail)}</span>
@@ -723,9 +755,11 @@ function RequestDetail({
       <div className="decision-grid">
         <article className="panel decision-card">
           <div className="panel__title">
-            <span className="icon-tile icon-tile--violet">
-              <Bot size={18} />
-            </span>
+              <span
+                className={`icon-tile icon-tile--${decisionTone(detail.decision)}`}
+              >
+                <Bot size={18} />
+              </span>
             <div className="panel__title-copy">
               <p>Agent decision</p>
               <div className="panel__title-row">
@@ -747,9 +781,9 @@ function RequestDetail({
 
         <article className="panel">
           <div className="panel__title">
-            <span className="icon-tile">
-              <Package size={18} />
-            </span>
+              <span className="icon-tile icon-tile--order">
+                <Package size={18} />
+              </span>
             <div className="panel__title-copy">
               <p>Relevant order</p>
               <div className="panel__title-row">
@@ -788,7 +822,9 @@ function RequestDetail({
         <article className="panel action-card">
           <div className="action-card__summary">
             <div className="panel__title">
-              <span className="icon-tile icon-tile--amber">
+              <span
+                className={`icon-tile icon-tile--${decisionTone(escalation.action)}`}
+              >
                 <CircleDollarSign size={18} />
               </span>
               <div className="panel__title-copy">
@@ -805,7 +841,9 @@ function RequestDetail({
               </strong>
             )}
           </div>
-          <div className="action-banner">
+          <div
+            className={`action-banner action-banner--${escalationTone(escalation.status)}`}
+          >
             <AlertTriangle size={18} />
             <div>
               <strong>
@@ -824,14 +862,14 @@ function RequestDetail({
           {escalation.status === "PENDING" ? (
             <div className="review-actions">
               <button
-                className="button button--secondary"
+                className="button button--reject"
                 disabled={reviewing}
                 onClick={() => act("REJECT")}
               >
                 <X size={17} /> Reject
               </button>
               <button
-                className="button button--primary"
+                className="button button--approve"
                 disabled={
                   reviewing ||
                   !order ||
@@ -843,7 +881,9 @@ function RequestDetail({
               </button>
             </div>
           ) : (
-            <div className="reviewed-state">
+            <div
+              className={`reviewed-state reviewed-state--${escalationTone(escalation.status)}`}
+            >
               <ShieldCheck size={17} /> {escalation.status} by{" "}
               {escalation.reviewedBy}
             </div>

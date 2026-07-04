@@ -1,5 +1,4 @@
 import "dotenv/config";
-import { eq } from "drizzle-orm";
 
 import { db, pool } from "../src/db";
 import {

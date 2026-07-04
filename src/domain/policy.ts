@@ -1,3 +1,6 @@
+/*
+ * Holds deterministic refund and cancellation policy checks that run before any mutation executes.
+ */
 import { AppError } from "@/lib/errors";
 
 export function assertRefundAllowed(

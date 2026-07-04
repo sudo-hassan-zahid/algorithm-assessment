@@ -1,3 +1,6 @@
+/*
+ * Creates escalations and reviews them under database locks so approvals execute at most once.
+ */
 import { and, eq, sql } from "drizzle-orm";
 
 import { db } from "@/db";

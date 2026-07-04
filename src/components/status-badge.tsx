@@ -1,3 +1,6 @@
+/*
+ * Compact semantic badge for request, order, and escalation state labels in the UI.
+ */
 const labels: Record<string, string> = {
   PENDING: "Pending",
   PROCESSING: "Processing",
