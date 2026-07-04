@@ -5,6 +5,7 @@ import {
   Bot,
   Check,
   ChevronRight,
+  CircleHelp,
   CircleDollarSign,
   Clock3,
   Inbox,
@@ -271,12 +272,16 @@ export function SupportConsole() {
             <div className="queue-panel__header">
               <div>
                 <p className="eyebrow">Workspace</p>
-                <h1>Support queue</h1>
+                <div className="title-with-help">
+                  <h1>Support queue</h1>
+                  <HelpTip text="Review incoming support requests here, filter the queue, and open a case to inspect the agent's decision." />
+                </div>
               </div>
               <button
                 className="icon-button queue-panel__action"
                 onClick={() => setComposerOpen(true)}
                 aria-label="New request"
+                title="Create a new seeded support request to send through the agent flow."
               >
                 <Plus size={18} />
               </button>
@@ -286,18 +291,23 @@ export function SupportConsole() {
               <button
                 className={filter === "ALL" ? "active" : ""}
                 onClick={() => setFilter("ALL")}
+                title="Show every request in the queue, including resolved items."
               >
                 All <span>{queue.length}</span>
               </button>
               <button
                 className={filter === "ESCALATED" ? "active" : ""}
                 onClick={() => setFilter("ESCALATED")}
+                title="Show only requests that still need a human reviewer."
               >
                 Needs review <span>{reviewCount}</span>
               </button>
             </div>
 
-            <div className="queue-insights">
+            <div
+              className="queue-insights"
+              title="Quick summary of the queue volume, review load, and seeded customer coverage."
+            >
               <div>
                 <span>Needs review</span>
                 <strong>{reviewCount}</strong>
@@ -354,7 +364,10 @@ export function SupportConsole() {
             <div className="queue-panel__header">
               <div>
                 <p className="eyebrow">Workspace</p>
-                <h1>Customers</h1>
+                <div className="title-with-help">
+                  <h1>Customers</h1>
+                  <HelpTip text="Browse seeded customers, then inspect account context and drill into their orders when you need more detail." />
+                </div>
               </div>
             </div>
             <div className="queue-list">
@@ -450,6 +463,15 @@ function LoadingState({ label }: { label: string }) {
   );
 }
 
+function HelpTip({ text }: { text: string }) {
+  return (
+    <span className="help-tip" tabIndex={0} aria-label={text} role="note">
+      <CircleHelp size={14} />
+      <span className="help-tip__bubble">{text}</span>
+    </span>
+  );
+}
+
 function DetailLoadingState({
   title,
   description,
@@ -511,9 +533,12 @@ function CustomerDetailPanel({ detail }: { detail: CustomerDetail }) {
             <span className="icon-tile">
               <UserRound size={18} />
             </span>
-            <div>
+            <div className="panel__title-copy">
               <p>Customer profile</p>
-              <h3>Account overview</h3>
+              <div className="panel__title-row">
+                <h3>Account overview</h3>
+                <HelpTip text="High-level customer facts for quick triage before you inspect individual orders." />
+              </div>
             </div>
           </div>
           <dl className="order-facts">
@@ -537,9 +562,12 @@ function CustomerDetailPanel({ detail }: { detail: CustomerDetail }) {
             <span className="icon-tile">
               <Package size={18} />
             </span>
-            <div>
+            <div className="panel__title-copy">
               <p>Order footprint</p>
-              <h3>Live order directory</h3>
+              <div className="panel__title-row">
+                <h3>Live order directory</h3>
+                <HelpTip text="Use this section to understand order coverage before expanding exact status, amount, and timestamps below." />
+              </div>
             </div>
           </div>
           <p className="muted-copy">
@@ -554,9 +582,12 @@ function CustomerDetailPanel({ detail }: { detail: CustomerDetail }) {
           <span className="icon-tile">
             <Package size={18} />
           </span>
-          <div>
+          <div className="panel__title-copy">
             <p>Orders</p>
-            <h3>Customer orders</h3>
+            <div className="panel__title-row">
+              <h3>Customer orders</h3>
+              <HelpTip text="Expand an order only when you need its latest snapshot and timestamp history." />
+            </div>
           </div>
         </div>
         {!detail.orders.length && (
@@ -640,7 +671,10 @@ function RequestDetail({
             <StatusBadge status={detail.status} />
             <span>#{detail.id.slice(0, 8)}</span>
           </div>
-          <h2>{detail.message}</h2>
+          <div className="title-with-help title-with-help--detail">
+            <h2>{detail.message}</h2>
+            <HelpTip text="This is the original customer request being reviewed against verified order data and policy rules." />
+          </div>
           <p>
             <UserRound size={15} /> {detail.customer.name} ·{" "}
             {detail.customer.email} · {relativeTime(detail.createdAt)}
@@ -692,9 +726,12 @@ function RequestDetail({
             <span className="icon-tile icon-tile--violet">
               <Bot size={18} />
             </span>
-            <div>
+            <div className="panel__title-copy">
               <p>Agent decision</p>
-              <h3>{formatDecisionLabel(detail.decision)}</h3>
+              <div className="panel__title-row">
+                <h3>{formatDecisionLabel(detail.decision)}</h3>
+                <HelpTip text="The model's proposed outcome after checking tools and policy constraints." />
+              </div>
             </div>
           </div>
           <p className="decision-reason">
@@ -713,9 +750,12 @@ function RequestDetail({
             <span className="icon-tile">
               <Package size={18} />
             </span>
-            <div>
+            <div className="panel__title-copy">
               <p>Relevant order</p>
-              <h3>{order ? `Order #${order.id}` : "No verified order"}</h3>
+              <div className="panel__title-row">
+                <h3>{order ? `Order #${order.id}` : "No verified order"}</h3>
+                <HelpTip text="Verified order facts used to approve, reject, or safely block the agent's proposed action." />
+              </div>
             </div>
           </div>
           {order ? (
@@ -751,9 +791,12 @@ function RequestDetail({
               <span className="icon-tile icon-tile--amber">
                 <CircleDollarSign size={18} />
               </span>
-              <div>
+              <div className="panel__title-copy">
                 <p>Proposed action</p>
-                <h3>{escalation.action}</h3>
+                <div className="panel__title-row">
+                  <h3>{escalation.action}</h3>
+                  <HelpTip text="This is the exact action waiting for review or the final action that already reached a terminal state." />
+                </div>
               </div>
             </div>
             {escalation.proposedAmount && order && (
@@ -813,9 +856,12 @@ function RequestDetail({
           <span className="icon-tile">
             <Clock3 size={18} />
           </span>
-          <div>
+          <div className="panel__title-copy">
             <p>Audit trail</p>
-            <h3>Agent activity</h3>
+            <div className="panel__title-row">
+              <h3>Agent activity</h3>
+              <HelpTip text="Expandable tool-call history showing what the agent asked for and what the backend returned." />
+            </div>
           </div>
         </div>
         {!detail.toolCalls.length && (
@@ -902,14 +948,20 @@ function RequestComposer({
         <div className="composer__heading">
           <div>
             <p className="eyebrow">Agent intake</p>
-            <h2>New support request</h2>
+            <div className="title-with-help">
+              <h2>New support request</h2>
+              <HelpTip text="Create a sample customer message and send it through the full agent, policy, and review workflow." />
+            </div>
           </div>
           <button type="button" className="icon-button" onClick={onClose}>
             <X size={18} />
           </button>
         </div>
         <label>
-          Customer
+          <span className="label-with-help">
+            Customer
+            <HelpTip text="Choose which seeded customer is sending the support message." />
+          </span>
           <select
             value={activeCustomerId}
             onChange={(event) => setCustomerId(event.target.value)}
@@ -925,7 +977,10 @@ function RequestComposer({
           </select>
         </label>
         <label>
-          Customer message
+          <span className="label-with-help">
+            Customer message
+            <HelpTip text="Write the exact request the model should interpret, such as refund, cancellation, or replacement intent." />
+          </span>
           <textarea
             value={message}
             onChange={(event) => setMessage(event.target.value)}
