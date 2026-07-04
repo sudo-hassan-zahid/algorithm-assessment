@@ -56,7 +56,8 @@ When using Docker for the entire stack instead, run `docker compose up --build`
 and skip the next step; it is the only setup/start command after `.env` is
 configured, and no local Node.js installation is required.
 
-The seed creates two customers and several orders:
+The seed is idempotent and safe to rerun. It loads 19 customers and 79 orders,
+including these highlighted manual-test scenarios:
 
 | Customer      | Order  | Status     | Amount     | Intended scenario                         |
 | ------------- | ------ | ---------- | ---------- | ----------------------------------------- |

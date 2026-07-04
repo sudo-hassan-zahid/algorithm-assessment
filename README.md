@@ -71,6 +71,9 @@ dev.bat
 `npm run dev`. The `predev` hook automatically waits for PostgreSQL, runs
 migrations, and loads the idempotent seed before Next.js starts.
 
+The seed is safe to rerun and loads a richer review dataset with 19 customers,
+79 orders, and multiple pre-seeded support scenarios.
+
 If you prefer not to use the script, the equivalent commands are:
 
 ```bash

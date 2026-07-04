@@ -51,6 +51,27 @@ button {
   background: var(--surface);
   border-bottom: 1px solid var(--line);
 }
+.workspace-switcher {
+  display: flex;
+  gap: 6px;
+  padding: 14px 26px 0;
+  background: linear-gradient(180deg, #ffffff 0%, #f5f7f4 100%);
+}
+.workspace-switcher button {
+  border: 1px solid var(--line);
+  border-bottom: 0;
+  border-radius: 10px 10px 0 0;
+  padding: 9px 14px 10px;
+  background: #edf1ee;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.workspace-switcher button.active {
+  background: #fbfcfa;
+  color: var(--ink);
+}
 .brand,
 .topbar__right,
 .panel__title,
@@ -115,7 +136,7 @@ button {
 }
 
 .workspace {
-  height: calc(100vh - 66px);
+  height: calc(100vh - 114px);
   display: grid;
   grid-template-columns: 365px minmax(0, 1fr);
 }
@@ -241,6 +262,18 @@ p {
 }
 .queue-card__footer > svg {
   color: #9aa49e;
+}
+.customer-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 4px 8px;
+  color: var(--violet);
+  background: var(--violet-soft);
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 .empty-state,
 .detail-empty {
@@ -669,6 +702,9 @@ p {
 }
 
 @media (max-width: 800px) {
+  .workspace-switcher {
+    padding: 12px 14px 0;
+  }
   .workspace {
     grid-template-columns: 1fr;
     height: auto;

@@ -1,4 +1,4 @@
-import { asc, desc, eq, inArray } from "drizzle-orm";
+import { asc, desc, eq, inArray, sql } from "drizzle-orm";
 
 import { db } from "@/db";
 import {
@@ -129,5 +129,50 @@ export async function getSupportRequest(id: string) {
 }
 
 export function listCustomers() {
-  return db.select().from(customers).orderBy(asc(customers.name));
+  return db
+    .select({
+      id: customers.id,
+      name: customers.name,
+      email: customers.email,
+      createdAt: customers.createdAt,
+      orderCount: sql<number>`count(${orders.id})`,
+    })
+    .from(customers)
+    .leftJoin(orders, eq(orders.customerId, customers.id))
+    .groupBy(customers.id)
+    .orderBy(asc(customers.name));
+}
+
+export async function getCustomer(id: string) {
+  const [customer] = await db
+    .select({
+      id: customers.id,
+      name: customers.name,
+      email: customers.email,
+      createdAt: customers.createdAt,
+    })
+    .from(customers)
+    .where(eq(customers.id, id))
+    .limit(1);
+  if (!customer) return null;
+
+  const customerOrders = await db
+    .select({
+      id: orders.id,
+      status: orders.status,
+      totalAmount: orders.totalAmount,
+      currency: orders.currency,
+      version: orders.version,
+      createdAt: orders.createdAt,
+      updatedAt: orders.updatedAt,
+    })
+    .from(orders)
+    .where(eq(orders.customerId, id))
+    .orderBy(desc(orders.createdAt));
+
+  return {
+    ...customer,
+    orderCount: customerOrders.length,
+    orders: customerOrders,
+  };
 }

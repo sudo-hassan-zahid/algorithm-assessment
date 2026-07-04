@@ -8,6 +8,7 @@ import {
   CircleDollarSign,
   Clock3,
   Inbox,
+  Mail,
   Package,
   Plus,
   RefreshCw,
@@ -21,6 +22,21 @@ import useSWR from "swr";
 import { StatusBadge } from "./status-badge";
 
 type Customer = { id: string; name: string; email: string };
+type CustomerSummary = Customer & {
+  createdAt: string;
+  orderCount: number;
+};
+type CustomerDetail = CustomerSummary & {
+  orders: Array<{
+    id: string;
+    status: string;
+    totalAmount: string;
+    currency: string;
+    version: number;
+    createdAt: string;
+    updatedAt: string;
+  }>;
+};
 type QueueItem = {
   id: string;
   message: string;
@@ -99,7 +115,11 @@ function relativeTime(value: string) {
 }
 
 export function SupportConsole() {
+  const [section, setSection] = useState<"REQUESTS" | "CUSTOMERS">("REQUESTS");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(
+    null,
+  );
   const [filter, setFilter] = useState<"ALL" | "ESCALATED">("ALL");
   const [composerOpen, setComposerOpen] = useState(false);
   const [notice, setNotice] = useState<{
@@ -114,8 +134,20 @@ export function SupportConsole() {
     refreshInterval: 3000,
   });
   const activeId = selectedId ?? queue[0]?.id ?? null;
+  const { data: customerList = [] } = useSWR<CustomerSummary[]>(
+    "/api/customers",
+    fetcher,
+    { refreshInterval: 3000 },
+  );
+  const activeCustomerId =
+    selectedCustomerId ?? customerList[0]?.id ?? null;
   const { data: detail, mutate: refreshDetail } = useSWR<Detail>(
     activeId ? `/api/requests/${activeId}` : null,
+    fetcher,
+    { refreshInterval: 3000 },
+  );
+  const { data: customerDetail } = useSWR<CustomerDetail>(
+    activeCustomerId ? `/api/customers/${activeCustomerId}` : null,
     fetcher,
     { refreshInterval: 3000 },
   );
@@ -173,75 +205,125 @@ export function SupportConsole() {
         </div>
       </header>
 
-      <section className="workspace">
-        <aside className="queue-panel">
-          <div className="queue-panel__header">
-            <div>
-              <p className="eyebrow">Workspace</p>
-              <h1>Support queue</h1>
-            </div>
-            <button
-              className="icon-button"
-              onClick={() => setComposerOpen(true)}
-              aria-label="New request"
-            >
-              <Plus size={18} />
-            </button>
-          </div>
-          <div className="queue-tabs">
-            <button
-              className={filter === "ALL" ? "active" : ""}
-              onClick={() => setFilter("ALL")}
-            >
-              All <span>{queue.length}</span>
-            </button>
-            <button
-              className={filter === "ESCALATED" ? "active" : ""}
-              onClick={() => setFilter("ESCALATED")}
-            >
-              Needs review{" "}
-              <span>
-                {queue.filter((item) => item.status === "ESCALATED").length}
-              </span>
-            </button>
-          </div>
+      <div className="workspace-switcher">
+        <button
+          className={section === "REQUESTS" ? "active" : ""}
+          onClick={() => setSection("REQUESTS")}
+        >
+          Support Queue
+        </button>
+        <button
+          className={section === "CUSTOMERS" ? "active" : ""}
+          onClick={() => setSection("CUSTOMERS")}
+        >
+          Customers
+        </button>
+      </div>
 
-          <div className="queue-list">
-            {isLoading && (
-              <div className="empty-state">
-                <RefreshCw className="spin" size={20} /> Loading queue
+      <section className="workspace">
+        {section === "REQUESTS" ? (
+          <aside className="queue-panel">
+            <div className="queue-panel__header">
+              <div>
+                <p className="eyebrow">Workspace</p>
+                <h1>Support queue</h1>
               </div>
-            )}
-            {!isLoading && !visibleQueue.length && (
-              <div className="empty-state">
-                <Inbox size={24} /> No requests here
-              </div>
-            )}
-            {visibleQueue.map((item) => (
               <button
-                className={`queue-card ${item.id === activeId ? "queue-card--active" : ""}`}
-                key={item.id}
-                onClick={() => {
-                  setSelectedId(item.id);
-                  setNotice(null);
-                }}
+                className="icon-button"
+                onClick={() => setComposerOpen(true)}
+                aria-label="New request"
               >
-                <div className="queue-card__meta">
-                  <span>{item.customer.name}</span>
-                  <time>{relativeTime(item.createdAt)}</time>
-                </div>
-                <p>{item.message}</p>
-                <div className="queue-card__footer">
-                  <StatusBadge status={item.status} />
-                  <ChevronRight size={16} />
-                </div>
+                <Plus size={18} />
               </button>
-            ))}
-          </div>
-        </aside>
+            </div>
+            <div className="queue-tabs">
+              <button
+                className={filter === "ALL" ? "active" : ""}
+                onClick={() => setFilter("ALL")}
+              >
+                All <span>{queue.length}</span>
+              </button>
+              <button
+                className={filter === "ESCALATED" ? "active" : ""}
+                onClick={() => setFilter("ESCALATED")}
+              >
+                Needs review{" "}
+                <span>
+                  {queue.filter((item) => item.status === "ESCALATED").length}
+                </span>
+              </button>
+            </div>
+
+            <div className="queue-list">
+              {isLoading && (
+                <div className="empty-state">
+                  <RefreshCw className="spin" size={20} /> Loading queue
+                </div>
+              )}
+              {!isLoading && !visibleQueue.length && (
+                <div className="empty-state">
+                  <Inbox size={24} /> No requests here
+                </div>
+              )}
+              {visibleQueue.map((item) => (
+                <button
+                  className={`queue-card ${item.id === activeId ? "queue-card--active" : ""}`}
+                  key={item.id}
+                  onClick={() => {
+                    setSelectedId(item.id);
+                    setNotice(null);
+                  }}
+                >
+                  <div className="queue-card__meta">
+                    <span>{item.customer.name}</span>
+                    <time>{relativeTime(item.createdAt)}</time>
+                  </div>
+                  <p>{item.message}</p>
+                  <div className="queue-card__footer">
+                    <StatusBadge status={item.status} />
+                    <ChevronRight size={16} />
+                  </div>
+                </button>
+              ))}
+            </div>
+          </aside>
+        ) : (
+          <aside className="queue-panel">
+            <div className="queue-panel__header">
+              <div>
+                <p className="eyebrow">Workspace</p>
+                <h1>Customers</h1>
+              </div>
+            </div>
+            <div className="queue-list">
+              {!customerList.length && (
+                <div className="empty-state">
+                  <Inbox size={24} /> No customers found
+                </div>
+              )}
+              {customerList.map((customer) => (
+                <button
+                  className={`queue-card ${customer.id === activeCustomerId ? "queue-card--active" : ""}`}
+                  key={customer.id}
+                  onClick={() => setSelectedCustomerId(customer.id)}
+                >
+                  <div className="queue-card__meta">
+                    <span>{customer.name}</span>
+                    <time>{customer.orderCount} orders</time>
+                  </div>
+                  <p>{customer.email}</p>
+                  <div className="queue-card__footer">
+                    <span className="customer-pill">Customer record</span>
+                    <ChevronRight size={16} />
+                  </div>
+                </button>
+              ))}
+            </div>
+          </aside>
+        )}
 
         <section className="detail-panel">
-          {!detail ? (
+          {section === "REQUESTS" ? !detail ? (
             <div className="detail-empty">
               <Inbox size={32} />
               <h2>Select a request</h2>
@@ -251,6 +333,14 @@ export function SupportConsole() {
             </div>
           ) : (
             <RequestDetail detail={detail} notice={notice} onReview={review} />
+          ) : !customerDetail ? (
+            <div className="detail-empty">
+              <Inbox size={32} />
+              <h2>Select a customer</h2>
+              <p>Choose a customer to inspect their account and orders.</p>
+            </div>
+          ) : (
+            <CustomerDetailPanel detail={customerDetail} />
           )}
         </section>
       </section>
@@ -266,6 +356,127 @@ export function SupportConsole() {
         />
       )}
     </main>
+  );
+}
+
+function CustomerDetailPanel({ detail }: { detail: CustomerDetail }) {
+  return (
+    <div className="detail-content">
+      <div className="detail-heading">
+        <div>
+          <div className="heading-meta">
+            <span className="customer-pill">Customer</span>
+            <span>#{detail.id.slice(0, 8)}</span>
+          </div>
+          <h2>{detail.name}</h2>
+          <p>
+            <Mail size={15} /> {detail.email} · {detail.orderCount} orders
+          </p>
+        </div>
+      </div>
+
+      <div className="decision-grid">
+        <article className="panel">
+          <div className="panel__title">
+            <span className="icon-tile">
+              <UserRound size={18} />
+            </span>
+            <div>
+              <p>Customer profile</p>
+              <h3>Account overview</h3>
+            </div>
+          </div>
+          <dl className="order-facts">
+            <div>
+              <dt>Name</dt>
+              <dd>{detail.name}</dd>
+            </div>
+            <div>
+              <dt>Orders</dt>
+              <dd>{detail.orderCount}</dd>
+            </div>
+            <div>
+              <dt>Customer since</dt>
+              <dd>{relativeTime(detail.createdAt)}</dd>
+            </div>
+          </dl>
+        </article>
+
+        <article className="panel">
+          <div className="panel__title">
+            <span className="icon-tile">
+              <Package size={18} />
+            </span>
+            <div>
+              <p>Order footprint</p>
+              <h3>Live order directory</h3>
+            </div>
+          </div>
+          <p className="muted-copy">
+            Expand any order to inspect its status, amount, version, and recent
+            timestamps.
+          </p>
+        </article>
+      </div>
+
+      <article className="panel trace-panel">
+        <div className="panel__title">
+          <span className="icon-tile">
+            <Package size={18} />
+          </span>
+          <div>
+            <p>Orders</p>
+            <h3>Customer orders</h3>
+          </div>
+        </div>
+        {!detail.orders.length && (
+          <p className="muted-copy">This customer does not have any orders.</p>
+        )}
+        <div className="trace-list customer-orders">
+          {detail.orders.map((order) => (
+            <details key={order.id} className="trace-item">
+              <summary>
+                <span>#</span>
+                <code>Order {order.id}</code>
+                <StatusBadge status={order.status} />
+                <ChevronRight size={15} />
+              </summary>
+              <div className="trace-data">
+                <div>
+                  <p>Snapshot</p>
+                  <pre>
+                    {JSON.stringify(
+                      {
+                        id: order.id,
+                        status: order.status,
+                        version: order.version,
+                        total:
+                          `${order.currency} ${Number(order.totalAmount).toFixed(2)}`,
+                      },
+                      null,
+                      2,
+                    )}
+                  </pre>
+                </div>
+                <div>
+                  <p>Timestamps</p>
+                  <pre>
+                    {JSON.stringify(
+                      {
+                        createdAt: order.createdAt,
+                        updatedAt: order.updatedAt,
+                      },
+                      null,
+                      2,
+                    )}
+                  </pre>
+                </div>
+              </div>
+            </details>
+          ))}
+        </div>
+      </article>
+    </div>
   );
 }
 
