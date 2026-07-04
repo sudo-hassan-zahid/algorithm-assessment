@@ -114,6 +114,19 @@ function relativeTime(value: string) {
   return hours < 24 ? `${hours}h ago` : `${Math.floor(hours / 24)}d ago`;
 }
 
+function formatDecisionLabel(value: string | null) {
+  return value ? value.replaceAll("_", " ") : "Awaiting decision";
+}
+
+function requestBanner(detail: Detail) {
+  if (detail.status === "ESCALATED") return "Reviewer action needed";
+  if (detail.status === "AUTO_EXECUTED") return "Resolved automatically";
+  if (detail.status === "APPROVED") return "Approved and executed";
+  if (detail.status === "REJECTED") return "Closed by reviewer";
+  if (detail.status === "FAILED") return "Automation fell back to review";
+  return "Actively processing";
+}
+
 export function SupportConsole() {
   const [section, setSection] = useState<"REQUESTS" | "CUSTOMERS">("REQUESTS");
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -126,6 +139,7 @@ export function SupportConsole() {
     tone: "success" | "error";
     text: string;
   } | null>(null);
+
   const {
     data: queue = [],
     mutate: refreshQueue,
@@ -133,14 +147,16 @@ export function SupportConsole() {
   } = useSWR<QueueItem[]>("/api/requests", fetcher, {
     refreshInterval: 3000,
   });
-  const activeId = selectedId ?? queue[0]?.id ?? null;
   const { data: customerList = [] } = useSWR<CustomerSummary[]>(
     "/api/customers",
     fetcher,
     { refreshInterval: 3000 },
   );
+
+  const activeId = selectedId ?? queue[0]?.id ?? null;
   const activeCustomerId =
     selectedCustomerId ?? customerList[0]?.id ?? null;
+
   const { data: detail, mutate: refreshDetail } = useSWR<Detail>(
     activeId ? `/api/requests/${activeId}` : null,
     fetcher,
@@ -159,6 +175,11 @@ export function SupportConsole() {
         : queue,
     [filter, queue],
   );
+
+  const reviewCount = queue.filter((item) => item.status === "ESCALATED").length;
+  const autoResolvedCount = queue.filter(
+    (item) => item.status === "AUTO_EXECUTED" || item.status === "APPROVED",
+  ).length;
 
   async function review(decision: "APPROVE" | "REJECT") {
     if (!detail?.escalation) return;
@@ -196,6 +217,14 @@ export function SupportConsole() {
           </div>
         </div>
         <div className="topbar__right">
+          <div className="topbar__stats">
+            <span>
+              Queue <strong>{queue.length}</strong>
+            </span>
+            <span>
+              Reviews <strong>{reviewCount}</strong>
+            </span>
+          </div>
           <span className="system-health">
             <i /> Systems operational
           </span>
@@ -236,6 +265,7 @@ export function SupportConsole() {
                 <Plus size={18} />
               </button>
             </div>
+
             <div className="queue-tabs">
               <button
                 className={filter === "ALL" ? "active" : ""}
@@ -247,11 +277,23 @@ export function SupportConsole() {
                 className={filter === "ESCALATED" ? "active" : ""}
                 onClick={() => setFilter("ESCALATED")}
               >
-                Needs review{" "}
-                <span>
-                  {queue.filter((item) => item.status === "ESCALATED").length}
-                </span>
+                Needs review <span>{reviewCount}</span>
               </button>
+            </div>
+
+            <div className="queue-insights">
+              <div>
+                <span>Needs review</span>
+                <strong>{reviewCount}</strong>
+              </div>
+              <div>
+                <span>Resolved</span>
+                <strong>{autoResolvedCount}</strong>
+              </div>
+              <div>
+                <span>Customers</span>
+                <strong>{customerList.length}</strong>
+              </div>
             </div>
 
             <div className="queue-list">
@@ -267,7 +309,7 @@ export function SupportConsole() {
               )}
               {visibleQueue.map((item) => (
                 <button
-                  className={`queue-card ${item.id === activeId ? "queue-card--active" : ""}`}
+                  className={`queue-card queue-card--${item.status.toLowerCase()} ${item.id === activeId ? "queue-card--active" : ""}`}
                   key={item.id}
                   onClick={() => {
                     setSelectedId(item.id);
@@ -279,6 +321,14 @@ export function SupportConsole() {
                     <time>{relativeTime(item.createdAt)}</time>
                   </div>
                   <p>{item.message}</p>
+                  <div className="queue-card__signal">
+                    <strong>{formatDecisionLabel(item.decision)}</strong>
+                    <span>
+                      {item.escalation?.reason ??
+                        item.decisionReason ??
+                        "Awaiting verified action details."}
+                    </span>
+                  </div>
                   <div className="queue-card__footer">
                     <StatusBadge status={item.status} />
                     <ChevronRight size={16} />
@@ -303,7 +353,7 @@ export function SupportConsole() {
               )}
               {customerList.map((customer) => (
                 <button
-                  className={`queue-card ${customer.id === activeCustomerId ? "queue-card--active" : ""}`}
+                  className={`queue-card queue-card--customer ${customer.id === activeCustomerId ? "queue-card--active" : ""}`}
                   key={customer.id}
                   onClick={() => setSelectedCustomerId(customer.id)}
                 >
@@ -312,6 +362,13 @@ export function SupportConsole() {
                     <time>{customer.orderCount} orders</time>
                   </div>
                   <p>{customer.email}</p>
+                  <div className="queue-card__signal">
+                    <strong>Customer overview</strong>
+                    <span>
+                      Created {relativeTime(customer.createdAt)} with{" "}
+                      {customer.orderCount} available orders.
+                    </span>
+                  </div>
                   <div className="queue-card__footer">
                     <span className="customer-pill">Customer record</span>
                     <ChevronRight size={16} />
@@ -323,16 +380,18 @@ export function SupportConsole() {
         )}
 
         <section className="detail-panel">
-          {section === "REQUESTS" ? !detail ? (
-            <div className="detail-empty">
-              <Inbox size={32} />
-              <h2>Select a request</h2>
-              <p>
-                Choose an item to inspect the agent decision and take action.
-              </p>
-            </div>
-          ) : (
-            <RequestDetail detail={detail} notice={notice} onReview={review} />
+          {section === "REQUESTS" ? (
+            !detail ? (
+              <div className="detail-empty">
+                <Inbox size={32} />
+                <h2>Select a request</h2>
+                <p>
+                  Choose an item to inspect the agent decision and take action.
+                </p>
+              </div>
+            ) : (
+              <RequestDetail detail={detail} notice={notice} onReview={review} />
+            )
           ) : !customerDetail ? (
             <div className="detail-empty">
               <Inbox size={32} />
@@ -374,6 +433,29 @@ function CustomerDetailPanel({ detail }: { detail: CustomerDetail }) {
           </p>
         </div>
       </div>
+
+      <section className="hero-card hero-card--customer">
+        <div>
+          <span className="hero-card__label">Customer context</span>
+          <h3>{detail.name} account overview</h3>
+          <p>
+            Scan the profile first, then expand individual orders only when you
+            need exact amounts, versions, or timestamps.
+          </p>
+        </div>
+        <div className="hero-card__facts">
+          <div>
+            <span>Total orders</span>
+            <strong>{detail.orderCount}</strong>
+          </div>
+          <div>
+            <span>Latest update</span>
+            <strong>
+              {detail.orders[0] ? relativeTime(detail.orders[0].updatedAt) : "N/A"}
+            </strong>
+          </div>
+        </div>
+      </section>
 
       <div className="decision-grid">
         <article className="panel">
@@ -518,6 +600,33 @@ function RequestDetail({
         </div>
       </div>
 
+      <section
+        className={`hero-card ${detail.status === "ESCALATED" ? "hero-card--alert" : "hero-card--neutral"}`}
+      >
+        <div>
+          <span className="hero-card__label">{requestBanner(detail)}</span>
+          <h3>{formatDecisionLabel(detail.decision)}</h3>
+          <p>
+            {detail.decisionReason ??
+              "The request is still being evaluated against verified order data."}
+          </p>
+        </div>
+        <div className="hero-card__facts">
+          <div>
+            <span>Request state</span>
+            <strong>{detail.status.replaceAll("_", " ")}</strong>
+          </div>
+          <div>
+            <span>Tool calls</span>
+            <strong>{detail.toolCalls.length}</strong>
+          </div>
+          <div>
+            <span>Escalation</span>
+            <strong>{escalation?.action ?? "None"}</strong>
+          </div>
+        </div>
+      </section>
+
       {notice && (
         <div className={`notice notice--${notice.tone}`}>
           {notice.tone === "success" ? (
@@ -537,9 +646,7 @@ function RequestDetail({
             </span>
             <div>
               <p>Agent decision</p>
-              <h3>
-                {detail.decision?.replace("_", " ") ?? "Awaiting decision"}
-              </h3>
+              <h3>{formatDecisionLabel(detail.decision)}</h3>
             </div>
           </div>
           <p className="decision-reason">
@@ -606,6 +713,21 @@ function RequestDetail({
                 {order.currency} {Number(escalation.proposedAmount).toFixed(2)}
               </strong>
             )}
+          </div>
+          <div className="action-banner">
+            <AlertTriangle size={18} />
+            <div>
+              <strong>
+                {escalation.status === "PENDING"
+                  ? "Reviewer checkpoint"
+                  : "Escalation outcome"}
+              </strong>
+              <span>
+                {escalation.status === "PENDING"
+                  ? "Approve only when the verified order facts and policy rules line up."
+                  : "This escalation already reached a terminal review state."}
+              </span>
+            </div>
           </div>
           <p>{escalation.reason}</p>
           {escalation.status === "PENDING" ? (
@@ -744,7 +866,7 @@ function RequestComposer({
           >
             {customers.map((customer) => (
               <option value={customer.id} key={customer.id}>
-                {customer.name} — {customer.email}
+                {customer.name} - {customer.email}
               </option>
             ))}
           </select>
@@ -798,7 +920,7 @@ function RequestComposer({
             ) : (
               <Bot size={17} />
             )}{" "}
-            {submitting ? "Agent is working…" : "Submit to agent"}
+            {submitting ? "Agent is working..." : "Submit to agent"}
           </button>
         </div>
       </form>
