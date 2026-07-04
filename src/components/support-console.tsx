@@ -234,19 +234,25 @@ export function SupportConsole() {
         </div>
       </header>
 
-      <div className="workspace-switcher">
-        <button
-          className={section === "REQUESTS" ? "active" : ""}
-          onClick={() => setSection("REQUESTS")}
+      <div className="workspace-switcher-wrap">
+        <div
+          className="workspace-switcher"
+          data-active={section === "REQUESTS" ? "left" : "right"}
         >
-          Support Queue
-        </button>
-        <button
-          className={section === "CUSTOMERS" ? "active" : ""}
-          onClick={() => setSection("CUSTOMERS")}
-        >
-          Customers
-        </button>
+          <span className="workspace-switcher__slider" aria-hidden="true" />
+          <button
+            className={section === "REQUESTS" ? "active" : ""}
+            onClick={() => setSection("REQUESTS")}
+          >
+            Support Queue
+          </button>
+          <button
+            className={section === "CUSTOMERS" ? "active" : ""}
+            onClick={() => setSection("CUSTOMERS")}
+          >
+            Customers
+          </button>
+        </div>
       </div>
 
       <section className="workspace">
@@ -258,7 +264,7 @@ export function SupportConsole() {
                 <h1>Support queue</h1>
               </div>
               <button
-                className="icon-button"
+                className="icon-button queue-panel__action"
                 onClick={() => setComposerOpen(true)}
                 aria-label="New request"
               >
