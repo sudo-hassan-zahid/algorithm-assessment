@@ -2,7 +2,7 @@
 
 Relay is a reviewer-first ecommerce support console backed by a real Groq tool-calling loop. It handles refund proposals, safe automatic cancellations, escalation review, and a complete database audit trail.
 
-## Stack
+## Tech stack
 
 - Next.js 16 and TypeScript
 - PostgreSQL 17 with Drizzle ORM
@@ -11,14 +11,14 @@ Relay is a reviewer-first ecommerce support console backed by a real Groq tool-c
 - SWR for concurrent UI refresh
 - Vitest for policy tests
 
-## Local setup
+## Local setup options
 
 Requirements: Docker, Node.js 22+, npm, and a free Groq API key.
 
 Copy `.env.example` to `.env`, add your `GROQ_API_KEY`, then choose one of the
 two local workflows below.
 
-### Option 1: simplest full-container startup
+### Option 1: full Docker workflow
 
 Start the complete stack:
 
@@ -27,19 +27,15 @@ cp .env.example .env
 docker compose up --build
 ```
 
-After that one-time API key configuration, `docker compose up --build` is the
-only setup and startup command. Do not run `npm install` on the host for this
-fully containerized workflow.
+Use this when you want the simplest startup path. Compose installs the app,
+waits for PostgreSQL, runs migrations, loads the idempotent demo seed, and
+starts the server at `http://localhost:3000`.
 
-Open `http://localhost:3000`. Compose installs the application, waits for
-PostgreSQL, applies migrations, loads the idempotent demo seed, and starts the
-server. New requests invoke the configured model.
-
-### Option 2: Compose for DB, host app for hot reload
+### Option 2: Docker DB + host app
 
 This repo is one Next.js app, so the frontend and backend are served by the
 same dev process. Use Docker Compose just for PostgreSQL, then run the app on
-the host:
+the host for hot reload.
 
 Install dependencies once:
 
@@ -67,12 +63,9 @@ Windows Command Prompt:
 dev.bat
 ```
 
-`dev.sh`, `dev.ps1`, and `dev.bat` start the `postgres` service and then run
-`npm run dev`. The `predev` hook automatically waits for PostgreSQL, runs
-migrations, and loads the idempotent seed before Next.js starts.
-
-The seed is safe to rerun and loads a richer review dataset with 19 customers,
-79 orders, and multiple pre-seeded support scenarios.
+Each script starts the `postgres` service and then runs `npm run dev`. The
+`predev` hook waits for PostgreSQL, runs migrations, and loads the idempotent
+seed before Next.js starts.
 
 If you prefer not to use the script, the equivalent commands are:
 
@@ -81,10 +74,18 @@ docker compose up -d postgres
 npm run dev
 ```
 
-The host-based workflow expects the Compose PostgreSQL container on port `5777`
-to avoid colliding with an existing local PostgreSQL server on `5432`.
+This host-based workflow uses PostgreSQL on port `5777` to avoid conflicts with
+local databases already running on `5432`.
 
 `npm start` automatically runs migrations without loading demo data.
+
+## App overview
+
+- Reviewer-first support queue with clear states for `PROCESSING`, `ESCALATED`, `APPROVED`, and `AUTO_EXECUTED`
+- Customer workspace to inspect seeded customer profiles and drill into each order on demand
+- Real Groq-backed request processing with tool calls, audit history, and guarded execution
+- Idempotent demo seed with 19 customers, 79 orders, and mixed support scenarios for review/testing
+- Interactive API docs at [`/swagger`](http://localhost:3000/swagger) and raw OpenAPI at [`/api/openapi`](http://localhost:3000/api/openapi)
 
 ## Verification
 
@@ -111,7 +112,9 @@ The exact enforcement paths are documented in [ARCHITECTURE.md](./ARCHITECTURE.m
 
 ## Deployment
 
-`render.yaml` provisions the web service and PostgreSQL database on Render. Create a Blueprint from the repository and provide `GROQ_API_KEY`; migrations and idempotent seed data run when the service starts.
+`render.yaml` provisions the web service and PostgreSQL database on Render.
+Create a Blueprint from the repository, provide `GROQ_API_KEY`, and startup
+will run migrations plus idempotent demo data automatically.
 
 For another platform, use:
 
@@ -129,7 +132,5 @@ For another platform, use:
 | `GET`  | `/api/requests/:id`           | Decision, order, trace, and audit detail   |
 | `POST` | `/api/escalations/:id/review` | Atomically approve or reject an escalation |
 | `GET`  | `/api/customers`              | Seeded intake customers                    |
+| `GET`  | `/api/customers/:id`          | Customer profile with order history        |
 | `GET`  | `/api/health`                 | Database-backed health check               |
-
-Interactive API documentation is available at [`/swagger`](http://localhost:3000/swagger),
-with the raw OpenAPI document at [`/api/openapi`](http://localhost:3000/api/openapi).

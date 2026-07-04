@@ -123,7 +123,7 @@ dt {
 
 .brand strong {
   font-size: 20px;
-  letter-spacing: -0.04em;
+  letter-spacing: -0.02em;
 }
 
 .brand span {
@@ -278,7 +278,7 @@ dt {
   margin: 0 0 8px;
   color: rgba(255, 255, 255, 0.6);
   text-transform: uppercase;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.12em;
   font-weight: 800;
   font-size: 10px;
 }
@@ -286,7 +286,7 @@ dt {
 .queue-panel h1 {
   font-size: 30px;
   margin: 0;
-  letter-spacing: -0.06em;
+  letter-spacing: -0.04em;
   line-height: 1;
 }
 
@@ -376,7 +376,7 @@ dt {
 
 .queue-insights strong {
   font-size: 22px;
-  letter-spacing: -0.05em;
+  letter-spacing: -0.03em;
 }
 
 .queue-list {
@@ -454,7 +454,7 @@ dt {
   margin: 10px 0 12px;
   font-size: 16px;
   line-height: 1.4;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.015em;
 }
 
 .queue-card__signal {
@@ -472,7 +472,7 @@ dt {
   display: block;
   font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.04em;
   margin-bottom: 7px;
   opacity: 0.78;
 }
@@ -499,7 +499,7 @@ dt {
   font-size: 9px;
   font-weight: 900;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
 }
 
 .empty-state,
@@ -516,6 +516,11 @@ dt {
   font-size: 14px;
 }
 
+.loading-state {
+  color: var(--ink);
+  font-weight: 700;
+}
+
 .status {
   width: fit-content;
   display: inline-flex;
@@ -529,7 +534,7 @@ dt {
   font-size: 10px;
   line-height: 1;
   font-weight: 900;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
   color: #526058;
   background: #ebefec;
@@ -571,11 +576,15 @@ dt {
   flex-direction: column;
 }
 
+.detail-empty--loading {
+  color: var(--ink);
+}
+
 .detail-empty h2 {
   margin: 8px 0 0;
   font-size: 28px;
   color: var(--ink);
-  letter-spacing: -0.05em;
+  letter-spacing: -0.03em;
 }
 
 .detail-empty p {
@@ -608,7 +617,7 @@ dt {
   margin: 14px 0 10px;
   font-size: 38px;
   line-height: 1.04;
-  letter-spacing: -0.08em;
+  letter-spacing: -0.05em;
 }
 
 .detail-heading p {
@@ -650,7 +659,7 @@ dt {
   background: rgba(255, 255, 255, 0.18);
   font-size: 10px;
   font-weight: 900;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
@@ -658,7 +667,7 @@ dt {
   margin: 14px 0 10px;
   font-size: 25px;
   line-height: 1.05;
-  letter-spacing: -0.06em;
+  letter-spacing: -0.035em;
 }
 
 .hero-card p {
@@ -687,7 +696,7 @@ dt {
   display: block;
   font-size: 10px;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   opacity: 0.75;
   margin-bottom: 8px;
 }
@@ -695,7 +704,7 @@ dt {
 .hero-card__facts strong {
   font-size: 15px;
   line-height: 1.25;
-  letter-spacing: -0.04em;
+  letter-spacing: -0.02em;
   white-space: normal;
   word-break: break-word;
 }
@@ -743,13 +752,13 @@ dt {
   font-size: 11px;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
 }
 
 .panel__title h3 {
   margin: 0;
   font-size: 20px;
-  letter-spacing: -0.05em;
+  letter-spacing: -0.03em;
   line-height: 1.15;
 }
 
@@ -825,7 +834,7 @@ dt {
   color: var(--muted);
   font-size: 10px;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   margin-bottom: 8px;
 }
 
@@ -833,7 +842,7 @@ dt {
   margin: 0;
   font-size: 16px;
   font-weight: 800;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
 }
 
 .action-card,
@@ -999,7 +1008,7 @@ dt {
   color: var(--muted);
   font-size: 10px;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
 }
 
 .trace-data pre {
@@ -1043,7 +1052,7 @@ dt {
 .composer h2 {
   margin: 0;
   font-size: 26px;
-  letter-spacing: -0.05em;
+  letter-spacing: -0.03em;
 }
 
 .composer label {

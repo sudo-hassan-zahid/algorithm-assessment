@@ -143,11 +143,14 @@ export function SupportConsole() {
   const {
     data: queue = [],
     mutate: refreshQueue,
-    isLoading,
+    isLoading: queueLoading,
   } = useSWR<QueueItem[]>("/api/requests", fetcher, {
     refreshInterval: 3000,
   });
-  const { data: customerList = [] } = useSWR<CustomerSummary[]>(
+  const {
+    data: customerList = [],
+    isLoading: customerListLoading,
+  } = useSWR<CustomerSummary[]>(
     "/api/customers",
     fetcher,
     { refreshInterval: 3000 },
@@ -157,12 +160,19 @@ export function SupportConsole() {
   const activeCustomerId =
     selectedCustomerId ?? customerList[0]?.id ?? null;
 
-  const { data: detail, mutate: refreshDetail } = useSWR<Detail>(
+  const {
+    data: detail,
+    mutate: refreshDetail,
+    isLoading: detailLoading,
+  } = useSWR<Detail>(
     activeId ? `/api/requests/${activeId}` : null,
     fetcher,
     { refreshInterval: 3000 },
   );
-  const { data: customerDetail } = useSWR<CustomerDetail>(
+  const {
+    data: customerDetail,
+    isLoading: customerDetailLoading,
+  } = useSWR<CustomerDetail>(
     activeCustomerId ? `/api/customers/${activeCustomerId}` : null,
     fetcher,
     { refreshInterval: 3000 },
@@ -303,12 +313,8 @@ export function SupportConsole() {
             </div>
 
             <div className="queue-list">
-              {isLoading && (
-                <div className="empty-state">
-                  <RefreshCw className="spin" size={20} /> Loading queue
-                </div>
-              )}
-              {!isLoading && !visibleQueue.length && (
+              {queueLoading && <LoadingState label="Loading queue" />}
+              {!queueLoading && !visibleQueue.length && (
                 <div className="empty-state">
                   <Inbox size={24} /> No requests here
                 </div>
@@ -352,7 +358,8 @@ export function SupportConsole() {
               </div>
             </div>
             <div className="queue-list">
-              {!customerList.length && (
+              {customerListLoading && <LoadingState label="Loading customers" />}
+              {!customerListLoading && !customerList.length && (
                 <div className="empty-state">
                   <Inbox size={24} /> No customers found
                 </div>
@@ -387,7 +394,12 @@ export function SupportConsole() {
 
         <section className="detail-panel">
           {section === "REQUESTS" ? (
-            !detail ? (
+            detailLoading && activeId ? (
+              <DetailLoadingState
+                title="Loading request"
+                description="Pulling the latest agent decision, order context, and audit trail."
+              />
+            ) : !detail ? (
               <div className="detail-empty">
                 <Inbox size={32} />
                 <h2>Select a request</h2>
@@ -398,6 +410,11 @@ export function SupportConsole() {
             ) : (
               <RequestDetail detail={detail} notice={notice} onReview={review} />
             )
+          ) : customerDetailLoading && activeCustomerId ? (
+            <DetailLoadingState
+              title="Loading customer"
+              description="Collecting the customer profile and recent orders."
+            />
           ) : !customerDetail ? (
             <div className="detail-empty">
               <Inbox size={32} />
@@ -421,6 +438,31 @@ export function SupportConsole() {
         />
       )}
     </main>
+  );
+}
+
+function LoadingState({ label }: { label: string }) {
+  return (
+    <div className="empty-state loading-state" aria-live="polite">
+      <RefreshCw className="spin" size={20} />
+      {label}
+    </div>
+  );
+}
+
+function DetailLoadingState({
+  title,
+  description,
+}: {
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="detail-empty detail-empty--loading" aria-live="polite">
+      <RefreshCw className="spin" size={30} />
+      <h2>{title}</h2>
+      <p>{description}</p>
+    </div>
   );
 }
 
@@ -815,7 +857,10 @@ function RequestComposer({
   onClose: () => void;
   onCreated: (id: string) => void;
 }) {
-  const { data: customers = [] } = useSWR<Customer[]>(
+  const {
+    data: customers = [],
+    isLoading: customersLoading,
+  } = useSWR<Customer[]>(
     "/api/customers",
     fetcher,
   );
@@ -868,8 +913,10 @@ function RequestComposer({
           <select
             value={activeCustomerId}
             onChange={(event) => setCustomerId(event.target.value)}
+            disabled={customersLoading || !customers.length}
             required
           >
+            {customersLoading && <option value="">Loading customers...</option>}
             {customers.map((customer) => (
               <option value={customer.id} key={customer.id}>
                 {customer.name} - {customer.email}
@@ -919,14 +966,18 @@ function RequestComposer({
           </button>
           <button
             className="button button--primary"
-            disabled={submitting || !activeCustomerId}
+            disabled={submitting || customersLoading || !activeCustomerId}
           >
             {submitting ? (
               <RefreshCw className="spin" size={17} />
             ) : (
               <Bot size={17} />
             )}{" "}
-            {submitting ? "Agent is working..." : "Submit to agent"}
+            {submitting
+              ? "Agent is working..."
+              : customersLoading
+                ? "Loading customers..."
+                : "Submit to agent"}
           </button>
         </div>
       </form>
